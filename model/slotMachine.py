@@ -16,7 +16,7 @@ class SlotMachine:
             print("Insufficient reel value, due to size difference")
         else:
             for col in range(self.dimension[0]):
-                self.reels[col] = listOfReels[col]
+                    self.reels[col] = listOfReels[col]
                 
     
     def spin(self):

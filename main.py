@@ -4,13 +4,15 @@ from view.viewSlotMachine import *
 import sys
 import pygame
 
+from games.gg import *
+
 class Game:
     def __init__(self, slot, fps):
         self.slot = slot
         self.spinLock = False
         self.fps = fps
         pygame.init()
-        self.screen = pygame.display.set_mode((800,900))
+        self.screen = pygame.display.set_mode((1000,900))
         pygame.display.set_caption("CrazySlot")
         self.clock = pygame.time.Clock()
 
@@ -43,15 +45,5 @@ class Game:
         else:
             self.slot.currentSpeed = self.slot.defaultSpeed
             
-
-machine = SlotMachine((5,5),20)
-reel1 = [FaceSymbol(10),FaceSymbol(10),FaceSymbol(10),FaceSymbol(10),FaceSymbol(10),
-         FaceSymbol(10),WildSymbol(10),WildSymbol(10),WildSymbol(10),FaceSymbol(10),
-         FaceSymbol(10),FaceSymbol(10),FaceSymbol(10),FaceSymbol(10),FaceSymbol(10),
-         ScatterSymbol(10,None),ScatterSymbol(10,None),ScatterSymbol(10,None),FaceSymbol(10),WildSymbol(10)]
-
-reels = [reel1 for _ in range(5)]
-machine.setReels(reels)
-viewSlotMachine = ViewSlotMachine(machine,'white',120, "reel",0.4)
-
-Game(viewSlotMachine,60).run()
+slot = GG() 
+Game(slot,60).run()
