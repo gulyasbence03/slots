@@ -150,11 +150,6 @@ class ViewSlotMachine:
                     #print(f"- X X X - {symbolName}")
                     pass
                 
-
-            
-
-
-
     def setLines(self,amount):
         line1 = [(0,0),(0,1),(0,2),(0,3),(0,4)]
         line2 = [(1,0),(1,1),(1,2),(1,3),(1,4)]
@@ -180,11 +175,20 @@ class ViewSlotMachine:
         line19= [(1,0),(2,1),(2,2),(2,3),(1,4)]
         line20= [(2,0),(1,1),(1,2),(1,3),(2,4)]
 
+        line21= [(1,0),(1,1),(0,2),(1,3),(1,4)]
+        line22= [(2,0),(2,1),(1,2),(2,3),(2,4)]
+        line23= [(3,0),(3,1),(2,2),(3,3),(3,4)]
+        line24= [(0,0),(0,1),(1,2),(0,3),(0,4)]
+        line25= [(1,0),(1,1),(2,2),(1,3),(1,4)]
+        line26= [(2,0),(2,1),(3,2),(2,3),(2,4)]
+
+
         lines = [line1,line2,line3,line4,line5,
                  line6,line7,line8,line9,line10,
                  line11,line12,line13,line14,line15,
-                 line16,line17,line18,line19,line20
-                 ]
+                 line16,line17,line18,line19,line20,
+                 line21,line22,line23,line24,line25,
+                 line26]
         
         return lines[:amount]
 

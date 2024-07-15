@@ -1,5 +1,3 @@
-from PIL import Image,ImageTk
-
 class Symbol:
     def __init__(self, name, value):
         self.name = name
