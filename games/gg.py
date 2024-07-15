@@ -123,7 +123,7 @@ class GG(ViewSlotMachine):
             wild.symbol,
             crown.symbol,
             wild.symbol,
-            wild.symbol,
+            helmet.symbol,
             crown.symbol,
             king.symbol,
             helmet.symbol,
@@ -194,7 +194,7 @@ class GG(ViewSlotMachine):
             helmet.symbol,
             ten.symbol,
             helmet.symbol,
-            wild.symbol,
+            swords.symbol,
             swords.symbol,
             helmet.symbol,
             crown.symbol,
@@ -220,7 +220,7 @@ class GG(ViewSlotMachine):
         ]
 
         reel5 = [
-            wild.symbol,
+            ten.symbol,
             wild.symbol,
             jack.symbol,
             queen.symbol,
