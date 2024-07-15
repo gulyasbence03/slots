@@ -28,6 +28,11 @@ class Game:
                         self.setSpinLock()
                         if not self.spinLock:
                             self.slot.spin()
+                    if event.key == pygame.K_m:
+                        if self.slot.mute == False:
+                            self.slot.mute = True
+                        else:
+                            self.slot.mute = False
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     self.setSpinLock()
                     if not self.spinLock:
