@@ -50,5 +50,5 @@ class Game:
         else:
             self.slot.currentSpeed = self.slot.defaultSpeed
             
-slot = GG() 
+slot = GG()
 Game(slot,60).run()

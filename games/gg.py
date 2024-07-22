@@ -20,6 +20,8 @@ class GG(ViewSlotMachine):
         self.hasPlayedSoundWILD = [False for _ in range(self.slotMachine.dimension[0])]
 
         self.spinFinished = False
+        self.selectedSymbols = {}
+
         cols = self.slotMachine.dimension[0]
         rows = self.slotMachine.dimension[1]
         for i in range(cols):
@@ -60,16 +62,16 @@ class GG(ViewSlotMachine):
 
     def loadReels(self):
     
-        ace = ViewFaceSymbol(FaceSymbol("ace",10),"assets/a.png")
-        king = ViewFaceSymbol(FaceSymbol("king",10),"assets/k.png")
-        queen = ViewFaceSymbol(FaceSymbol("queen",10),"assets/q.png")
-        jack = ViewFaceSymbol(FaceSymbol("jack",10),"assets/j.png")
-        ten = ViewFaceSymbol(FaceSymbol("ten",10),"assets/10.png")
-        crown = ViewFaceSymbol(FaceSymbol("crown",10),"assets/crown.png")
-        helmet = ViewFaceSymbol(FaceSymbol("helmet",10),"assets/helmet.png")
-        swords = ViewFaceSymbol(FaceSymbol("swords",10),"assets/swords.png")
-        wild = ViewWildSymbol(WildSymbol("wild",10),"assets/wild.png")
-        scatter = ViewScatterSymbol(ScatterSymbol("scatter",100,None),"assets/throne.png")
+        ace = ViewFaceSymbol(FaceSymbol("ace",10),"assets/a.png",self.tileSize)
+        king = ViewFaceSymbol(FaceSymbol("king",10),"assets/k.png",self.tileSize)
+        queen = ViewFaceSymbol(FaceSymbol("queen",10),"assets/q.png",self.tileSize)
+        jack = ViewFaceSymbol(FaceSymbol("jack",10),"assets/j.png",self.tileSize)
+        ten = ViewFaceSymbol(FaceSymbol("ten",10),"assets/10.png",self.tileSize)
+        crown = ViewFaceSymbol(FaceSymbol("crown",10),"assets/crown.png",self.tileSize*1.1)
+        helmet = ViewFaceSymbol(FaceSymbol("helmet",10),"assets/helmet.png",self.tileSize*1.1)
+        swords = ViewFaceSymbol(FaceSymbol("swords",10),"assets/swords.png",self.tileSize*1.2)
+        wild = ViewWildSymbol(WildSymbol("wild",10),"assets/wild.png",self.tileSize*1.7)
+        scatter = ViewScatterSymbol(ScatterSymbol("scatter",100,None),"assets/throne.png",self.tileSize*1.5)
 
         reel1 = [
             ten.symbol,

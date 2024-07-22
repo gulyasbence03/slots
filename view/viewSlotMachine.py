@@ -2,13 +2,15 @@ import numpy as np
 from model.symbols import FaceSymbol,WildSymbol,ScatterSymbol
 from view.viewSymbol import *
 from collections import Counter
+from view.line import *
 
 
 class ViewSlotMachine:
     def __init__(self,slotMachine, background,tileSize, type, speed):
         self.slotMachine = slotMachine
-        self.lines = self.setLines(20)
+        self.lines = self.setLines(26)
         self.winLines = None
+        self.selectedSymbols = {}
 
         # Visual
         self.background = pygame.image.load(background)
@@ -33,22 +35,18 @@ class ViewSlotMachine:
         self.readyToPlaySoundWILD = [False for _ in range(slotMachine.dimension[0])]
         self.hasPlayedSoundWILD = [False for _ in range(slotMachine.dimension[0])]
 
-    def display(self, screen):
+    def clear(self,screen):
         screen.fill('black')
         screen.blit(self.background,[45,60])
+    def display(self, screen):
+        self.clear(screen)
         cols = self.slotMachine.dimension[0]
         rows = self.slotMachine.dimension[1]
         for i in range(cols):
             for j in range(rows):
                 currentViewSymbol = self.currentTable[cols-i-1][rows-j-1]
                 if currentViewSymbol is not None and currentViewSymbol is not 0:
-                    if currentViewSymbol.symbol.name == "wild" or currentViewSymbol.symbol.name == "scatter" :
-                        currentViewSymbol.image = pygame.transform.scale(currentViewSymbol.image,[self.tileSize*1.7,self.tileSize*1.7])
-
-                    elif currentViewSymbol.symbol.name == "swords":
-                        currentViewSymbol.image = pygame.transform.scale(currentViewSymbol.image,[self.tileSize*1.7,self.tileSize*1.7])
-                    else:
-                        currentViewSymbol.image = pygame.transform.scale(currentViewSymbol.image,[self.tileSize,self.tileSize])
+                    currentViewSymbol.image = pygame.transform.scale(currentViewSymbol.image,[currentViewSymbol.symbolSize,currentViewSymbol.symbolSize])
                         
                     self.slideIn(screen, currentViewSymbol, cols ,rows,cols-i-1, rows-j-1)
             self.playReelStopSound(i)
@@ -79,14 +77,14 @@ class ViewSlotMachine:
             if i == cols-1 and j == rows-1:
                 self.spinFinished = True
 
-        if symbol.symbol.name =="swords" or symbol.symbol.name == "wild" or symbol.symbol.name =="scatter":
-            symbol.x -= (self.tileSize*1.7 - self.tileSize) / 2
-            symbol.y -= (self.tileSize*1.7 - self.tileSize) / 2
 
         if symbol.symbol.name == "wild":
             if not self.hasPlayedSoundWILD[i]:
                 self.readyToPlaySoundWILD[i] = True
-            
+
+        symbol.x -= (symbol.symbolSize-self.tileSize)  / 2
+        symbol.y -= (symbol.symbolSize-self.tileSize)  / 2
+
         screen.blit(symbol.image,[symbol.x,symbol.y])
 
     def checkWins(self):
@@ -100,7 +98,7 @@ class ViewSlotMachine:
         rows = self.slotMachine.dimension[1]
         # all symbols in given line
         symbolsInLine = []
-        for elem in line:
+        for elem in line.line:
             symbolsInLine.append(self.currentTable[elem[1]][rows-elem[0]-1].symbol)
         symbolsInLine = Counter(symbolsInLine).most_common()
         # sort symbol types by amount, so bigger chance for
@@ -113,27 +111,41 @@ class ViewSlotMachine:
         
         for symbol in sortedSymbols:
             
-            first = self.currentTable[line[0][1]][rows-line[0][0]-1].symbol
-            second = self.currentTable[line[1][1]][rows-line[1][0]-1].symbol
-            third = self.currentTable[line[2][1]][rows-line[2][0]-1].symbol
-            fourth = self.currentTable[line[3][1]][rows-line[3][0]-1].symbol
-            fifth = self.currentTable[line[4][1]][rows-line[4][0]-1].symbol
+            first = self.currentTable[line.line[0][1]][rows-line.line[0][0]-1]
+            second = self.currentTable[line.line[1][1]][rows-line.line[1][0]-1]
+            third = self.currentTable[line.line[2][1]][rows-line.line[2][0]-1]
+            fourth = self.currentTable[line.line[3][1]][rows-line.line[3][0]-1]
+            fifth = self.currentTable[line.line[4][1]][rows-line.line[4][0]-1]
             
             symbolName = symbol.name
 
             """ RULES """
 
-            if first.name in [symbolName,"wild"]:
+            temp_list = []
+            if first.symbol.name in [symbolName,"wild"]:
                 # first 3 symbol or wild (X X X any any)
-                if second.name in [symbolName,"wild"] and third.name in [symbolName,"wild"]:
+                if second.symbol.name in [symbolName,"wild"] and third.symbol.name in [symbolName,"wild"]:
                     # first 4 symbol or wild (X X X X any)
-                    if fourth.name in [symbolName,"wild"]:
+                    if fourth.symbol.name in [symbolName,"wild"]:
                         # first 5 symbol or wild (X X X X X)
-                        if fifth.name in [symbolName,"wild"]:
-                            print(f"X X X X X {symbolName}")
+                        if fifth.symbol.name in [symbolName,"wild"]:
+                            #print(f"X X X X X {symbolName}")
+                            
+                            temp_list.append((line.line[0][1],rows-line.line[0][0]-1))
+                            temp_list.append((line.line[1][1],rows-line.line[1][0]-1))
+                            temp_list.append((line.line[2][1],rows-line.line[2][0]-1))
+                            temp_list.append((line.line[3][1],rows-line.line[3][0]-1))
+                            temp_list.append((line.line[4][1],rows-line.line[4][0]-1))   
+                            self.selectedSymbols[line.name] = temp_list
                             return True
                         else:
-                            print(f"X X X X - {symbolName}")
+                            #print(f"X X X X - {symbolName}")
+                            temp_list.append((line.line[0][1],rows-line.line[0][0]-1))
+                            temp_list.append((line.line[1][1],rows-line.line[1][0]-1))
+                            temp_list.append((line.line[2][1],rows-line.line[2][0]-1))
+                            temp_list.append((line.line[3][1],rows-line.line[3][0]-1)) 
+                            self.selectedSymbols[line.name] = temp_list
+                            
                             return True
                     else:
                         #print(f"X X X - - {symbolName}")
@@ -141,46 +153,53 @@ class ViewSlotMachine:
                     
             
             #first X next continous 3 symbol or wild (any X X X any)
-            elif second.name in [symbolName,"wild"] and third.name in [symbolName,"wild"] and fourth.name in [symbolName,"wild"]:
+            elif second.symbol.name in [symbolName,"wild"] and third.symbol.name in [symbolName,"wild"] and fourth.symbol.name in [symbolName,"wild"]:
                 # first 5 symbol or wild
-                if fifth.name in [symbolName,"wild"]:
-                    print(f"- X X X X {symbolName}")
+                if fifth.symbol.name in [symbolName,"wild"]:
+                    #print(f"- X X X X {symbolName}")
+                    temp_list.append((line.line[1][1],rows-line.line[1][0]-1))
+                    temp_list.append((line.line[2][1],rows-line.line[2][0]-1))
+                    temp_list.append((line.line[3][1],rows-line.line[3][0]-1))
+                    temp_list.append((line.line[4][1],rows-line.line[4][0]-1))  
+                    self.selectedSymbols[line.name] = temp_list
+                    
                     return True
                 else:
                     #print(f"- X X X - {symbolName}")
                     pass
+            
                 
     def setLines(self,amount):
-        line1 = [(0,0),(0,1),(0,2),(0,3),(0,4)]
-        line2 = [(1,0),(1,1),(1,2),(1,3),(1,4)]
-        line3 = [(2,0),(2,1),(2,2),(2,3),(2,4)]
-        line4 = [(3,0),(3,1),(3,2),(3,3),(3,4)]
+        line1 = Line("line1", [(0,0),(0,1),(0,2),(0,3),(0,4)])
+        line2 = Line("line2",[(1,0),(1,1),(1,2),(1,3),(1,4)])
+        line3 = Line("line3",[(2,0),(2,1),(2,2),(2,3),(2,4)])
+        line4 = Line("line4",[(3,0),(3,1),(3,2),(3,3),(3,4)])
 
-        line5 = [(0,0),(1,1),(2,2),(1,3),(0,4)]
-        line6 = [(1,0),(2,1),(3,2),(2,3),(1,4)]
-        line7 = [(3,0),(2,1),(1,2),(2,3),(3,4)]
-        line8 = [(2,0),(1,1),(0,2),(1,3),(2,4)]
+        line5 = Line("line5",[(0,0),(1,1),(2,2),(1,3),(0,4)])
+        line6 = Line("line6",[(1,0),(2,1),(3,2),(2,3),(1,4)])
+        line7 = Line("line7",[(3,0),(2,1),(1,2),(2,3),(3,4)])
+        line8 = Line("line8",[(2,0),(1,1),(0,2),(1,3),(2,4)])
 
-        line9 = [(0,0),(1,1),(0,2),(1,3),(0,4)]
-        line10= [(3,0),(2,1),(3,2),(2,3),(3,4)]
-        line11= [(1,0),(0,1),(1,2),(0,3),(1,4)]
-        line12= [(2,0),(3,1),(2,2),(3,3),(2,4)]
-        line13= [(1,0),(2,1),(1,2),(2,3),(1,4)]
-        line14= [(2,0),(1,1),(2,2),(1,3),(2,4)]
+        line9 = Line("line9",[(0,0),(1,1),(0,2),(1,3),(0,4)])
+        line10= Line("line10",[(3,0),(2,1),(3,2),(2,3),(3,4)])
+        line11= Line("line11",[(1,0),(0,1),(1,2),(0,3),(1,4)])
+        line12= Line("line12",[(2,0),(3,1),(2,2),(3,3),(2,4)])
+        line13= Line("line13",[(1,0),(2,1),(1,2),(2,3),(1,4)])
+        line14= Line("line14",[(2,0),(1,1),(2,2),(1,3),(2,4)])
 
-        line15= [(0,0),(1,1),(1,2),(1,3),(0,4)]
-        line16= [(3,0),(2,1),(2,2),(2,3),(3,4)]
-        line17= [(1,0),(0,1),(0,2),(0,3),(1,4)]
-        line18= [(2,0),(3,1),(3,2),(3,3),(2,4)]
-        line19= [(1,0),(2,1),(2,2),(2,3),(1,4)]
-        line20= [(2,0),(1,1),(1,2),(1,3),(2,4)]
+        line15= Line("line15",[(0,0),(1,1),(1,2),(1,3),(0,4)])
+        line16= Line("line16",[(3,0),(2,1),(2,2),(2,3),(3,4)])
+        line17= Line("line17",[(1,0),(0,1),(0,2),(0,3),(1,4)])
+        line18= Line("line18",[(2,0),(3,1),(3,2),(3,3),(2,4)])
+        line19= Line("line19",[(1,0),(2,1),(2,2),(2,3),(1,4)])
+        line20= Line("line20",[(2,0),(1,1),(1,2),(1,3),(2,4)])
 
-        line21= [(1,0),(1,1),(0,2),(1,3),(1,4)]
-        line22= [(2,0),(2,1),(1,2),(2,3),(2,4)]
-        line23= [(3,0),(3,1),(2,2),(3,3),(3,4)]
-        line24= [(0,0),(0,1),(1,2),(0,3),(0,4)]
-        line25= [(1,0),(1,1),(2,2),(1,3),(1,4)]
-        line26= [(2,0),(2,1),(3,2),(2,3),(2,4)]
+        line21= Line("line21",[(1,0),(1,1),(0,2),(1,3),(1,4)])
+        line22= Line("line22",[(2,0),(2,1),(1,2),(2,3),(2,4)])
+        line23= Line("line23",[(3,0),(3,1),(2,2),(3,3),(3,4)])
+        line24= Line("line24",[(0,0),(0,1),(1,2),(0,3),(0,4)])
+        line25= Line("line25",[(1,0),(1,1),(2,2),(1,3),(1,4)])
+        line26= Line("line26",[(2,0),(2,1),(3,2),(2,3),(2,4)])
 
 
         lines = [line1,line2,line3,line4,line5,
@@ -193,16 +212,53 @@ class ViewSlotMachine:
         return lines[:amount]
 
     def displayWins(self, screen):
-        #for line in winingLines: or lines = winningLines
+        # DRAW LINES
         if len(self.winLines) > 0:
             line = self.winLines[int((self.animSprite/30) % len(self.winLines))]
-            for i in range(len(line)-1):
-                start = (93 + line[i][1] * self.tileSize * 1.35 + self.tileSize/2,
-                            104 + line[i][0] * self.tileSize + self.tileSize/2)  
-                end = (93 + line[i+1][1] * self.tileSize * 1.35 + self.tileSize/2,
-                            104 + line[i+1][0] * self.tileSize + self.tileSize/2)
+            for i in range(len(line.line)-1):
+                start = (93 + line.line[i][1] * self.tileSize * 1.35 + self.tileSize/2,
+                            104 + line.line[i][0] * self.tileSize + self.tileSize/2)  
+                end = (93 + line.line[i+1][1] * self.tileSize * 1.35 + self.tileSize/2,
+                            104 + line.line[i+1][0] * self.tileSize + self.tileSize/2)
+                
+
                 pygame.draw.line(screen,"gold",start,end,7)
 
+                # ANIMATE SYMBOLS
+                currLine = self.selectedSymbols[line.name]
+                for elem in currLine:       
+                    symbol = self.currentTable[elem[0],elem[1]]
+                    #print(f"({elem[1]},{elem[0]}) {symbol.symbol.name}",end="")
+                    originX = 93 + elem[0] * self.tileSize * 1.35 
+                    originY = 105 + (self.slotMachine.dimension[1]-elem[1]-1)*self.tileSize
+
+                    outlineX = originX - (symbol.symbolSize*0.8-self.tileSize)  / 2
+                    outlineY = originY - (symbol.symbolSize*0.8-self.tileSize)  / 2
+
+                    originX -= (symbol.symbolSize-self.tileSize)  / 2
+                    originY -= (symbol.symbolSize-self.tileSize)  / 2
+
+                    
+
+                    tempSurface = pygame.Surface((symbol.symbolSize,symbol.symbolSize),pygame.SRCALPHA)
+                    tempSurface.set_alpha(35) 
+
+                    x = originX
+                    y = originY
+                    if symbol.symbol.name == "wild":
+                        tempSurface.set_alpha(75) 
+                        pygame.draw.rect(tempSurface,pygame.Color(220,20,60),pygame.Rect(0,0,symbol.symbolSize*0.8,symbol.symbolSize*0.8))
+                        x = outlineX+1
+                        y = outlineY-4
+                    else:
+                        pygame.draw.circle(tempSurface,pygame.Color(220,20,60),[symbol.symbolSize*0.5,symbol.symbolSize*0.5],symbol.symbolSize*0.5)
+                    screen.blit(tempSurface,(x,y))
+                    screen.blit(symbol.image, [originX,originY])
+                    #print()   
+
+        
+
+    
     def playReelStopSound(self, i):
         
         if self.readyToPlaySoundREEL[i] and not self.mute:
