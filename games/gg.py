@@ -1,18 +1,25 @@
 from model.slotMachine import *
 from model.symbols import *
 from view.viewSlotMachine import *
-
+from account import *
 
 
 class GG(ViewSlotMachine):
     def __init__(self):
         machine = SlotMachine((5,4),34)
-        ViewSlotMachine.__init__(self,machine,'assets/background.png',128,"reel",0.38)
+        acc = Account(1000)
+        ViewSlotMachine.__init__(self,machine,'assets/background.png',128,"reel",0.38,acc)
         self.loadReels()
         self.slotMachine.setReels(self.reels)
 
     def spin(self):
+        if self.account.balance < self.account.betAmount:
+            return
+        self.account.bet(self.account.betAmount)
+        self.account.wonAmounts = {}
+        self.isWinCounted = False
         self.slotMachine.spin()
+        
 
         self.readyToPlaySoundREEL = [False for _ in range(self.slotMachine.dimension[0])]
         self.hasPlayedSoundREEL = [False for _ in range(self.slotMachine.dimension[0])]
@@ -60,17 +67,19 @@ class GG(ViewSlotMachine):
             print()
         self.animSprite = 0
 
+        self.account.won(self.account.wonAmount)
+
     def loadReels(self):
-    
-        ace = ViewFaceSymbol(FaceSymbol("ace",10),"assets/a.png",self.tileSize)
-        king = ViewFaceSymbol(FaceSymbol("king",10),"assets/k.png",self.tileSize)
-        queen = ViewFaceSymbol(FaceSymbol("queen",10),"assets/q.png",self.tileSize)
-        jack = ViewFaceSymbol(FaceSymbol("jack",10),"assets/j.png",self.tileSize)
-        ten = ViewFaceSymbol(FaceSymbol("ten",10),"assets/10.png",self.tileSize)
-        crown = ViewFaceSymbol(FaceSymbol("crown",10),"assets/crown.png",self.tileSize*1.1)
-        helmet = ViewFaceSymbol(FaceSymbol("helmet",10),"assets/helmet.png",self.tileSize*1.1)
-        swords = ViewFaceSymbol(FaceSymbol("swords",10),"assets/swords.png",self.tileSize*1.2)
-        wild = ViewWildSymbol(WildSymbol("wild",10),"assets/wild.png",self.tileSize*1.7)
+        ten = ViewFaceSymbol(FaceSymbol("ten",0.2),"assets/10.png",self.tileSize)
+        jack = ViewFaceSymbol(FaceSymbol("jack",0.4),"assets/j.png",self.tileSize)
+        queen = ViewFaceSymbol(FaceSymbol("queen",0.6),"assets/q.png",self.tileSize)
+        king = ViewFaceSymbol(FaceSymbol("king",0.8),"assets/k.png",self.tileSize)
+        ace = ViewFaceSymbol(FaceSymbol("ace",1.0),"assets/a.png",self.tileSize)
+
+        crown = ViewFaceSymbol(FaceSymbol("crown",1.5),"assets/crown.png",self.tileSize*1.1)
+        helmet = ViewFaceSymbol(FaceSymbol("helmet",2.0),"assets/helmet.png",self.tileSize*1.1)
+        swords = ViewFaceSymbol(FaceSymbol("swords",4.0),"assets/swords.png",self.tileSize*1.2)
+        wild = ViewWildSymbol(WildSymbol("wild",5.0),"assets/wild.png",self.tileSize*1.7)
         scatter = ViewScatterSymbol(ScatterSymbol("scatter",100,None),"assets/throne.png",self.tileSize*1.5)
 
         reel1 = [

@@ -6,11 +6,14 @@ from view.line import *
 
 
 class ViewSlotMachine:
-    def __init__(self,slotMachine, background,tileSize, type, speed):
+    def __init__(self,slotMachine, background,tileSize, type, speed, account):
         self.slotMachine = slotMachine
+        self.account = account
         self.lines = self.setLines(26)
         self.winLines = None
         self.selectedSymbols = {}
+        self.isWinCounted = False
+        
 
         # Visual
         self.background = pygame.image.load(background)
@@ -38,6 +41,7 @@ class ViewSlotMachine:
     def clear(self,screen):
         screen.fill('black')
         screen.blit(self.background,[45,60])
+
     def display(self, screen):
         self.clear(screen)
         cols = self.slotMachine.dimension[0]
@@ -53,7 +57,10 @@ class ViewSlotMachine:
 
         if self.spinFinished and self.currentTable[0][0] is not 0:
             self.checkWins()
+            self.countWins(screen)
             self.displayWins(screen)
+
+        self.displayBalance(screen)
 
         return not self.spinFinished
 
@@ -106,8 +113,6 @@ class ViewSlotMachine:
         for doub in symbolsInLine:
             if doub[0].name not in ["wild","scatter"]:
                 sortedSymbols.append(doub[0])
-        
-        
         
         for symbol in sortedSymbols:
             
@@ -168,7 +173,42 @@ class ViewSlotMachine:
                     #print(f"- X X X - {symbolName}")
                     pass
             
+
+    def countWins(self,screen):
+        if len(self.winLines) > 0:
+            if not self.isWinCounted:
+                self.account.wonAmounts = {}
                 
+                for line in self.winLines:
+                    sum = 0
+                    currLine = self.selectedSymbols[line.name]
+                    for elem in currLine:       
+                        symbol = self.currentTable[elem[0],elem[1]]
+                        sum += symbol.symbol.value
+
+                    sum*=self.account.betAmount
+                    self.account.wonAmounts[line.name] = round(sum,2)
+                self.account.won(self.account.wonAmounts)
+                self.isWinCounted = True
+        if len(self.account.wonAmounts) > 0:
+            self.displayWinCount(screen, self.account.wonAmounts)
+
+    def displayWinCount(self,screen, amounts):
+        # create a font object.
+        # 1st parameter is the font file
+        # which is present in pygame.
+        # 2nd parameter is size of the font
+        font = pygame.font.Font('freesansbold.ttf', 28)
+        
+        # create a text surface object,
+        # on which text is drawn on it.
+        amount = 0
+        for elem in list(amounts.values()):
+            amount += elem
+        text = font.render(f"Won: {amount}", True,"gold")
+        screen.blit(text,(450,670))  
+        
+
     def setLines(self,amount):
         line1 = Line("line1", [(0,0),(0,1),(0,2),(0,3),(0,4)])
         line2 = Line("line2",[(1,0),(1,1),(1,2),(1,3),(1,4)])
@@ -214,6 +254,7 @@ class ViewSlotMachine:
     def displayWins(self, screen):
         # DRAW LINES
         if len(self.winLines) > 0:
+
             line = self.winLines[int((self.animSprite/30) % len(self.winLines))]
             for i in range(len(line.line)-1):
                 start = (93 + line.line[i][1] * self.tileSize * 1.35 + self.tileSize/2,
@@ -224,10 +265,12 @@ class ViewSlotMachine:
 
                 pygame.draw.line(screen,"gold",start,end,7)
 
+
                 # ANIMATE SYMBOLS
                 currLine = self.selectedSymbols[line.name]
                 for elem in currLine:       
                     symbol = self.currentTable[elem[0],elem[1]]
+
                     #print(f"({elem[1]},{elem[0]}) {symbol.symbol.name}",end="")
                     originX = 93 + elem[0] * self.tileSize * 1.35 
                     originY = 105 + (self.slotMachine.dimension[1]-elem[1]-1)*self.tileSize
@@ -247,16 +290,45 @@ class ViewSlotMachine:
                     y = originY
                     if symbol.symbol.name == "wild":
                         tempSurface.set_alpha(75) 
-                        pygame.draw.rect(tempSurface,pygame.Color(220,20,60),pygame.Rect(0,0,symbol.symbolSize*0.8,symbol.symbolSize*0.8))
-                        x = outlineX+1
-                        y = outlineY-4
+                        pygame.draw.rect(tempSurface,pygame.Color(220,20,60),pygame.Rect(1,15,symbol.symbolSize*0.8,symbol.symbolSize*0.8))
+                        x = outlineX
+                        y = outlineY-20
                     else:
                         pygame.draw.circle(tempSurface,pygame.Color(220,20,60),[symbol.symbolSize*0.5,symbol.symbolSize*0.5],symbol.symbolSize*0.5)
                     screen.blit(tempSurface,(x,y))
                     screen.blit(symbol.image, [originX,originY])
                     #print()   
 
+                self.displayLineWin(screen,line)
+            
+    def displayLineWin(self,screen,line):
+        # create a font object.
+        # 1st parameter is the font file
+        # which is present in pygame.
+        # 2nd parameter is size of the font
+        font = pygame.font.Font('freesansbold.ttf', 50)
         
+        # create a text surface object,
+        # on which text is drawn on it.
+        text = font.render(f"{self.account.wonAmounts.get(line.name)}", True,"gold","black")
+        text_width, text_height = font.size(f"{self.account.wonAmounts.get(line.name)}")
+        x = 93 + line.line[2][1] * self.tileSize * 1.35 + self.tileSize/2 - text_width/2
+        y = 104 + line.line[2][0] * self.tileSize + self.tileSize/2
+
+        screen.blit(text,(x,y))  
+    
+
+    def displayBalance(self,screen):
+        # create a font object.
+        # 1st parameter is the font file
+        # which is present in pygame.
+        # 2nd parameter is size of the font
+        font = pygame.font.Font('freesansbold.ttf', 32)
+        
+        # create a text surface object,
+        # on which text is drawn on it.
+        text = font.render(f"Balance: {self.account.balance}", True, "black", "gold")
+        screen.blit(text,(100,680))    
 
     
     def playReelStopSound(self, i):
