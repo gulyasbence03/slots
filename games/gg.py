@@ -6,7 +6,7 @@ from account import *
 
 class GG(ViewSlotMachine):
     def __init__(self):
-        machine = SlotMachine((5,4),34)
+        machine = SlotMachine((5,4),34+2)
         acc = Account(1000)
         ViewSlotMachine.__init__(self,machine,'assets/background.png',128,"reel",0.38,acc)
         self.loadReels()
@@ -15,7 +15,19 @@ class GG(ViewSlotMachine):
     def spin(self):
         if self.account.balance < self.account.betAmount:
             return
-        self.account.bet(self.account.betAmount)
+        
+        if self.freeSpins <= 0:
+            self.freeSpins = 0
+            self.bonusOn = False
+            self.bonusWildisOut = [[False]*self.slotMachine.dimension[1] for _ in range(self.slotMachine.dimension[0])]
+            self.bonusWildSlots = []
+            self.account.bet(self.account.betAmount)
+        else:
+            self.freeSpins-=1
+
+
+        self.bonusScreen = False
+        
         self.account.wonAmounts = {}
         self.isWinCounted = False
         self.slotMachine.spin()
@@ -33,38 +45,48 @@ class GG(ViewSlotMachine):
         rows = self.slotMachine.dimension[1]
         for i in range(cols):
             for j in range(rows):
-                currentSymbol = self.slotMachine.getElement(i,j)
+                
                 currentViewSymbol = None
-                print(currentSymbol.name)
-                if isinstance(currentSymbol,FaceSymbol):
-                    if currentSymbol.name == "swords":
-                        currentViewSymbol = self.swords
-                    elif currentSymbol.name == "helmet":
-                        currentViewSymbol = self.helmet
-                    elif currentSymbol.name == "crown":
-                        currentViewSymbol = self.crown
-                    elif currentSymbol.name == "ace":
-                        currentViewSymbol = self.ace
-                    elif currentSymbol.name == "king":
-                        currentViewSymbol = self.king
-                    elif currentSymbol.name == "queen":
-                        currentViewSymbol = self.queen
-                    elif currentSymbol.name == "jack":
-                        currentViewSymbol = self.jack
-                    elif currentSymbol.name == "ten":
-                        currentViewSymbol = self.ten
-                    
+                if ((i,j)) in  self.bonusWildSlots:
+                    currentSymbol = self.wild.symbol
+                else:
+                    currentSymbol = self.slotMachine.getElement(i,j)
 
-                if isinstance(currentSymbol,WildSymbol):
-                    if currentSymbol.name == "wild":
-                        currentViewSymbol = self.wild
+                if currentSymbol is not None:
+                    #print(currentSymbol.name)
+                    if isinstance(currentSymbol,FaceSymbol):
+                        if currentSymbol.name == "swords":
+                            currentViewSymbol = self.swords
+                        elif currentSymbol.name == "helmet":
+                            currentViewSymbol = self.helmet
+                        elif currentSymbol.name == "crown":
+                            currentViewSymbol = self.crown
+                        elif currentSymbol.name == "ace":
+                            currentViewSymbol = self.ace
+                        elif currentSymbol.name == "king":
+                            currentViewSymbol = self.king
+                        elif currentSymbol.name == "queen":
+                            currentViewSymbol = self.queen
+                        elif currentSymbol.name == "jack":
+                            currentViewSymbol = self.jack
+                        elif currentSymbol.name == "ten":
+                            currentViewSymbol = self.ten
+                        
 
-                if isinstance(currentSymbol, ScatterSymbol):
-                    if currentSymbol.name == "scatter":
-                        currentViewSymbol = self.scatter
+                    if isinstance(currentSymbol,WildSymbol):
+                        if currentSymbol.name == "wild":
+                            currentViewSymbol = self.wild
+                            if self.bonusOn and (i,j) not in self.bonusWildSlots:
+                                self.bonusWildSlots.append((i,j))
+                                self.freeSpins+=1
+                                
+                                
+
+                    if isinstance(currentSymbol, ScatterSymbol):
+                        if currentSymbol.name == "scatter":
+                            currentViewSymbol = self.scatter
 
                 self.currentTable[i][rows-j-1] = currentViewSymbol
-            print()
         self.animSprite = 0
 
         self.account.won(self.account.wonAmount)
@@ -267,7 +289,6 @@ class GG(ViewSlotMachine):
             king.symbol
         ]
 
-        self.reels = [reel1,reel2,reel3,reel4,reel5]
         self.ace = ace
         self.king = king
         self.queen = queen
@@ -278,3 +299,18 @@ class GG(ViewSlotMachine):
         self.crown = crown
         self.helmet = helmet
         self.swords = swords
+
+        test_reel1= (reel1).copy()
+        test_reel2= (reel2).copy()
+        test_reel3= (reel3).copy()
+        test_reel4= (reel4).copy()
+        test_reel5= (reel5).copy()
+
+        for _ in range(2):
+            test_reel1.append(scatter.symbol)
+            test_reel2.append(self.scatter.symbol)
+            test_reel3.append(self.scatter.symbol)
+            test_reel4.append(self.scatter.symbol)
+            test_reel5.append(self.scatter.symbol)
+
+        self.reels = [test_reel1,test_reel2,test_reel3,test_reel4,test_reel5]

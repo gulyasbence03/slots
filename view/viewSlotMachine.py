@@ -13,7 +13,14 @@ class ViewSlotMachine:
         self.winLines = None
         self.selectedSymbols = {}
         self.isWinCounted = False
+        self.bonusOn = False
+        self.bonusScreen = False
         
+        self.freeSpins = 0
+        self.bonusWildSlots = []
+        
+        self.bonusWildisOut = [[False]*slotMachine.dimension[1] for _ in range(slotMachine.dimension[0])]
+
 
         # Visual
         self.background = pygame.image.load(background)
@@ -44,31 +51,90 @@ class ViewSlotMachine:
 
     def display(self, screen):
         self.clear(screen)
+        if self.bonusScreen and self.spinFinished:
+            self.displayBonusScreen(screen)
+            return not self.spinFinished
+
         cols = self.slotMachine.dimension[0]
         rows = self.slotMachine.dimension[1]
         for i in range(cols):
             for j in range(rows):
                 currentViewSymbol = self.currentTable[cols-i-1][rows-j-1]
-                if currentViewSymbol is not None and currentViewSymbol is not 0:
+                if currentViewSymbol is not None and currentViewSymbol != 0:
                     currentViewSymbol.image = pygame.transform.scale(currentViewSymbol.image,[currentViewSymbol.symbolSize,currentViewSymbol.symbolSize])
                         
                     self.slideIn(screen, currentViewSymbol, cols ,rows,cols-i-1, rows-j-1)
+            
             self.playReelStopSound(i)
 
-        if self.spinFinished and self.currentTable[0][0] is not 0:
+        if self.spinFinished and self.currentTable[0][0] != 0:
             self.checkWins()
             self.countWins(screen)
+            self.checkBonus()
             self.displayWins(screen)
 
         self.displayBalance(screen)
+        if self.bonusOn:
+            self.displayFreeSpins(screen)
 
         return not self.spinFinished
+
+    def checkBonus(self):
+        # Bonus Game
+        if not self.bonusOn:
+            bonusCounter = 0
+
+            cols = self.slotMachine.dimension[0]
+            rows = self.slotMachine.dimension[1]
+            for i in range(cols):
+                for j in range(rows):
+                    currentViewSymbol = self.currentTable[cols-i-1][rows-j-1]
+                    if currentViewSymbol is not None and currentViewSymbol != 0:
+                        if currentViewSymbol.symbol.name == "scatter":
+                            bonusCounter+=1
+
+            if bonusCounter >= 3:
+                self.bonusScreen = True
+                self.bonusOn = True
+                self.freeSpins = bonusCounter*2
+
+    def displayFreeSpins(self,screen):
+        # create a font object.
+        # 1st parameter is the font file
+        # which is present in pygame.
+        # 2nd parameter is size of the font
+        font = pygame.font.Font('freesansbold.ttf', 40)
+
+        # create a text surface object,
+        # on which text is drawn on it.
+        bottom_text = font.render(f"Free Spins: {self.freeSpins}",True,"green")
+        text_width, text_height = font.size(f"{self.freeSpins} Free Spins")
+        screen.blit(bottom_text,(730-text_width/2,700-text_height/2)) 
+
+    def displayBonusScreen(self,screen):
+        # create a font object.
+        # 1st parameter is the font file
+        # which is present in pygame.
+        # 2nd parameter is size of the font
+        font = pygame.font.Font('freesansbold.ttf', 100)
+        
+        # create a text surface object,
+        # on which text is drawn on it.
+        top_text = font.render(f"BONUS GAME", True,"green","black")
+        text_width, text_height = font.size("Bonus Game")
+        screen.blit(top_text,(450-text_width/2,300-text_height/2)) 
+
+        font = pygame.font.Font('freesansbold.ttf', 60)
+        bottom_text = font.render(f"You won {self.freeSpins} free spins!",True,"green","black")
+        text_width, text_height = font.size(f"You won {self.freeSpins} free spins!")
+        screen.blit(bottom_text,(500-text_width/2,400-text_height/2)) 
 
     def slideIn(self,screen, symbol, cols, rows, i ,j):
         if self.type == "reel":
             movingValue = round(self.animSprite*self.tileSize*self.currentSpeed) - (rows*(j-1)*self.tileSize)/rows -((i+1)*cols*self.tileSize)*(4/5)
         elif self.type == "piece":    
             movingValue = self.animSprite*0.8*self.tileSize*self.currentSpeed - (rows*(j-1)*self.tileSize)*(2/5)-((i+3)*cols*self.tileSize)/3
+
 
         if  movingValue < (rows-j-1)*self.tileSize:
             symbol.x = 93 + i * self.tileSize * 1.35
@@ -84,13 +150,29 @@ class ViewSlotMachine:
             if i == cols-1 and j == rows-1:
                 self.spinFinished = True
 
+        
+        symbol.x -= (symbol.symbolSize-self.tileSize)  / 2
+        symbol.y -= (symbol.symbolSize-self.tileSize)  / 2
 
         if symbol.symbol.name == "wild":
             if not self.hasPlayedSoundWILD[i]:
                 self.readyToPlaySoundWILD[i] = True
 
-        symbol.x -= (symbol.symbolSize-self.tileSize)  / 2
-        symbol.y -= (symbol.symbolSize-self.tileSize)  / 2
+            if ((i,rows-j-1)) in self.bonusWildSlots:
+                if not self.bonusWildisOut[i][rows-j-1]:
+                    
+                    if self.spinFinished:
+                        self.bonusWildisOut[i][rows-j-1] = True
+                        
+                else:
+                    symbol.x = 93 + i * self.tileSize * 1.35
+                    symbol.y = 104 + (rows-j-1)*self.tileSize
+                    symbol.x -= (symbol.symbolSize-self.tileSize)  / 2
+                    symbol.y -= (symbol.symbolSize-self.tileSize)  / 2
+                    screen.blit(symbol.image,[symbol.x,symbol.y])
+
+                    return
+        
 
         screen.blit(symbol.image,[symbol.x,symbol.y])
 
@@ -172,7 +254,7 @@ class ViewSlotMachine:
                 else:
                     #print(f"- X X X - {symbolName}")
                     pass
-            
+                    
 
     def countWins(self,screen):
         if len(self.winLines) > 0:
@@ -271,7 +353,6 @@ class ViewSlotMachine:
                 for elem in currLine:       
                     symbol = self.currentTable[elem[0],elem[1]]
 
-                    #print(f"({elem[1]},{elem[0]}) {symbol.symbol.name}",end="")
                     originX = 93 + elem[0] * self.tileSize * 1.35 
                     originY = 105 + (self.slotMachine.dimension[1]-elem[1]-1)*self.tileSize
 
@@ -297,7 +378,6 @@ class ViewSlotMachine:
                         pygame.draw.circle(tempSurface,pygame.Color(220,20,60),[symbol.symbolSize*0.5,symbol.symbolSize*0.5],symbol.symbolSize*0.5)
                     screen.blit(tempSurface,(x,y))
                     screen.blit(symbol.image, [originX,originY])
-                    #print()   
 
                 self.displayLineWin(screen,line)
             
