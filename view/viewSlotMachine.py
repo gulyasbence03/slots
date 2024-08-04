@@ -76,6 +76,7 @@ class ViewSlotMachine:
         self.displayBalance(screen)
         if self.bonusOn:
             self.displayFreeSpins(screen)
+            self.displayBonusTotalWin(screen)
 
         return not self.spinFinished
 
@@ -96,20 +97,20 @@ class ViewSlotMachine:
             if bonusCounter >= 3:
                 self.bonusScreen = True
                 self.bonusOn = True
-                self.freeSpins = bonusCounter*2
+                self.freeSpins = bonusCounter
 
     def displayFreeSpins(self,screen):
         # create a font object.
         # 1st parameter is the font file
         # which is present in pygame.
         # 2nd parameter is size of the font
-        font = pygame.font.Font('freesansbold.ttf', 40)
+        font = pygame.font.Font('freesansbold.ttf', 32)
 
         # create a text surface object,
         # on which text is drawn on it.
         bottom_text = font.render(f"Free Spins: {self.freeSpins}",True,"green")
         text_width, text_height = font.size(f"{self.freeSpins} Free Spins")
-        screen.blit(bottom_text,(730-text_width/2,700-text_height/2)) 
+        screen.blit(bottom_text,(780-text_width/2,700-text_height/2)) 
 
     def displayBonusScreen(self,screen):
         # create a font object.
@@ -269,11 +270,31 @@ class ViewSlotMachine:
                         sum += symbol.symbol.value
 
                     sum*=self.account.betAmount
+
                     self.account.wonAmounts[line.name] = round(sum,2)
-                self.account.won(self.account.wonAmounts)
+
+                if self.bonusOn:
+                    self.account.addBonusTotal(self.account.wonAmounts)
+                else:
+                    self.account.won(self.account.wonAmounts)
+
                 self.isWinCounted = True
+
         if len(self.account.wonAmounts) > 0:
             self.displayWinCount(screen, self.account.wonAmounts)
+
+    def displayBonusTotalWin(self,screen):
+        # create a font object.
+        # 1st parameter is the font file
+        # which is present in pygame.
+        # 2nd parameter is size of the font
+        font = pygame.font.Font('freesansbold.ttf', 28)
+        
+        # create a text surface object,
+        # on which text is drawn on it. 
+        if self.bonusOn:
+            text = font.render(f"Total Won: {self.account.bonusTotalWin}", True,"gold")
+            screen.blit(text,(400,710)) 
 
     def displayWinCount(self,screen, amounts):
         # create a font object.
@@ -288,7 +309,7 @@ class ViewSlotMachine:
         for elem in list(amounts.values()):
             amount += elem
         text = font.render(f"Won: {amount}", True,"gold")
-        screen.blit(text,(450,670))  
+        screen.blit(text,(420,670))  
         
 
     def setLines(self,amount):

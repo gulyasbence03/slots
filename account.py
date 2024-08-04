@@ -3,6 +3,7 @@ class Account:
         self.balance = balance
         self.wonAmount = 0
         self.betAmount = 10
+        self.bonusTotalWin = 0
     
     def changeBetAmount(self,bet):
         if bet > 0:
@@ -19,6 +20,16 @@ class Account:
         if bool(wonAmount):
             for elem in list(wonAmount.values()):
                 self.balance += round(elem,2)
+
+    def addBonusTotal(self,wonAmount):
+        if bool(wonAmount):
+            for elem in list(wonAmount.values()):
+                self.bonusTotalWin += round(elem,2)
+
+    def addBonusToBalance(self):
+        if self.bonusTotalWin > 0:
+            self.balance += self.bonusTotalWin
+        self.bonusTotalWin = 0
 
     def deposit(amount):
         pass

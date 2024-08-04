@@ -21,7 +21,11 @@ class GG(ViewSlotMachine):
             self.bonusOn = False
             self.bonusWildisOut = [[False]*self.slotMachine.dimension[1] for _ in range(self.slotMachine.dimension[0])]
             self.bonusWildSlots = []
+            
+            self.account.addBonusToBalance()
+            
             self.account.bet(self.account.betAmount)
+
         else:
             self.freeSpins-=1
 
