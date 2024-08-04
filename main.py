@@ -4,7 +4,7 @@ from view.viewSlotMachine import *
 import sys
 import pygame
 
-from games.gg import *
+from games.royal import *
 
 class Game:
     def __init__(self, slot, fps):

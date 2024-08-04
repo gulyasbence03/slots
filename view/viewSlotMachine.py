@@ -7,21 +7,14 @@ from sound import *
 
 class ViewSlotMachine:
     def __init__(self,slotMachine, background,tileSize, type, speed, account):
+        # LOGIC
         self.slotMachine = slotMachine
         self.account = account
         self.lines = self.setLines(26)
         self.winLines = None
         self.selectedSymbols = {}
         self.isWinCounted = False
-        self.bonusOn = False
-        self.bonusScreen = False
-        
-        self.freeSpins = 0
-        self.bonusWildSlots = []
-        
-        self.bonusWildisOut = [[False]*slotMachine.dimension[1] for _ in range(slotMachine.dimension[0])]
-
-
+    
         # Visual
         self.background = pygame.image.load(background)
         self.background = pygame.transform.scale(self.background,[910,600])
@@ -36,12 +29,19 @@ class ViewSlotMachine:
         # Sound
         self.soundPlayer = SoundPlayer(slotMachine.dimension[0],slotMachine.dimension[1])
 
-    def clear(self,screen):
+        # Bonusgame
+        self.bonusOn = False
+        self.bonusScreen = False
+        self.freeSpins = 0
+        self.bonusWildSlots = []
+        self.bonusWildisOut = [[False]*slotMachine.dimension[1] for _ in range(slotMachine.dimension[0])]
+
+    def clearScreen(self,screen):
         screen.fill('black')
         screen.blit(self.background,[45,60])
 
     def display(self, screen):
-        self.clear(screen)
+        self.clearScreen(screen)
         if self.bonusScreen and self.spinFinished:
             self.displayBonusScreen(screen)
             return not self.spinFinished
