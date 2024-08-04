@@ -12,6 +12,10 @@ class GG(ViewSlotMachine):
         self.loadReels()
         self.slotMachine.setReels(self.reels)
 
+        
+        self.soundPlayer.setReelStopSound(pygame.mixer.Sound("assets/reelstop.wav"))
+        self.soundPlayer.setWildSound(pygame.mixer.Sound("assets/wild.wav"))
+
     def spin(self):
         if self.account.balance < self.account.betAmount:
             return
@@ -36,11 +40,7 @@ class GG(ViewSlotMachine):
         self.isWinCounted = False
         self.slotMachine.spin()
         
-
-        self.readyToPlaySoundREEL = [False for _ in range(self.slotMachine.dimension[0])]
-        self.hasPlayedSoundREEL = [False for _ in range(self.slotMachine.dimension[0])]
-        self.readyToPlaySoundWILD = [False for _ in range(self.slotMachine.dimension[0])]
-        self.hasPlayedSoundWILD = [False for _ in range(self.slotMachine.dimension[0])]
+        self.soundPlayer.resetReelSounds(self.slotMachine.dimension[0],self.slotMachine.dimension[1])
 
         self.spinFinished = False
         self.selectedSymbols = {}
@@ -79,7 +79,12 @@ class GG(ViewSlotMachine):
 
                     if isinstance(currentSymbol,WildSymbol):
                         if currentSymbol.name == "wild":
+                            
                             currentViewSymbol = self.wild
+
+                            if (i,j) in self.bonusWildisOut:
+                                self.soundPlayer.hasPlayedSoundWILD[i][j] = True   
+
                             if self.bonusOn and (i,j) not in self.bonusWildSlots:
                                 self.bonusWildSlots.append((i,j))
                                 self.freeSpins+=1
@@ -94,6 +99,49 @@ class GG(ViewSlotMachine):
         self.animSprite = 0
 
         self.account.won(self.account.wonAmount)
+
+
+    def setLines(self,amount):
+        line1 = Line("line1", [(0,0),(0,1),(0,2),(0,3),(0,4)])
+        line2 = Line("line2",[(1,0),(1,1),(1,2),(1,3),(1,4)])
+        line3 = Line("line3",[(2,0),(2,1),(2,2),(2,3),(2,4)])
+        line4 = Line("line4",[(3,0),(3,1),(3,2),(3,3),(3,4)])
+
+        line5 = Line("line5",[(0,0),(1,1),(2,2),(1,3),(0,4)])
+        line6 = Line("line6",[(1,0),(2,1),(3,2),(2,3),(1,4)])
+        line7 = Line("line7",[(3,0),(2,1),(1,2),(2,3),(3,4)])
+        line8 = Line("line8",[(2,0),(1,1),(0,2),(1,3),(2,4)])
+
+        line9 = Line("line9",[(0,0),(1,1),(0,2),(1,3),(0,4)])
+        line10= Line("line10",[(3,0),(2,1),(3,2),(2,3),(3,4)])
+        line11= Line("line11",[(1,0),(0,1),(1,2),(0,3),(1,4)])
+        line12= Line("line12",[(2,0),(3,1),(2,2),(3,3),(2,4)])
+        line13= Line("line13",[(1,0),(2,1),(1,2),(2,3),(1,4)])
+        line14= Line("line14",[(2,0),(1,1),(2,2),(1,3),(2,4)])
+
+        line15= Line("line15",[(0,0),(1,1),(1,2),(1,3),(0,4)])
+        line16= Line("line16",[(3,0),(2,1),(2,2),(2,3),(3,4)])
+        line17= Line("line17",[(1,0),(0,1),(0,2),(0,3),(1,4)])
+        line18= Line("line18",[(2,0),(3,1),(3,2),(3,3),(2,4)])
+        line19= Line("line19",[(1,0),(2,1),(2,2),(2,3),(1,4)])
+        line20= Line("line20",[(2,0),(1,1),(1,2),(1,3),(2,4)])
+
+        line21= Line("line21",[(1,0),(1,1),(0,2),(1,3),(1,4)])
+        line22= Line("line22",[(2,0),(2,1),(1,2),(2,3),(2,4)])
+        line23= Line("line23",[(3,0),(3,1),(2,2),(3,3),(3,4)])
+        line24= Line("line24",[(0,0),(0,1),(1,2),(0,3),(0,4)])
+        line25= Line("line25",[(1,0),(1,1),(2,2),(1,3),(1,4)])
+        line26= Line("line26",[(2,0),(2,1),(3,2),(2,3),(2,4)])
+
+
+        lines = [line1,line2,line3,line4,line5,
+                 line6,line7,line8,line9,line10,
+                 line11,line12,line13,line14,line15,
+                 line16,line17,line18,line19,line20,
+                 line21,line22,line23,line24,line25,
+                 line26]
+        
+        return lines[:amount]
 
     def loadReels(self):
         ten = ViewFaceSymbol(FaceSymbol("ten",0.2),"assets/10.png",self.tileSize)

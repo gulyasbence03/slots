@@ -3,7 +3,7 @@ from model.symbols import FaceSymbol,WildSymbol,ScatterSymbol
 from view.viewSymbol import *
 from collections import Counter
 from view.line import *
-
+from sound import *
 
 class ViewSlotMachine:
     def __init__(self,slotMachine, background,tileSize, type, speed, account):
@@ -34,16 +34,7 @@ class ViewSlotMachine:
         self.spinFinished = True
 
         # Sound
-        self.mute = False
-        pygame.mixer.init()
-        self.reelStopSound = pygame.mixer.Sound("assets/reelstop.wav")
-        self.reelWildSound = pygame.mixer.Sound("assets/wild.wav")
-
-        self.readyToPlaySoundREEL = [False for _ in range(slotMachine.dimension[0])]
-        self.hasPlayedSoundREEL = [False for _ in range(slotMachine.dimension[0])]
-
-        self.readyToPlaySoundWILD = [False for _ in range(slotMachine.dimension[0])]
-        self.hasPlayedSoundWILD = [False for _ in range(slotMachine.dimension[0])]
+        self.soundPlayer = SoundPlayer(slotMachine.dimension[0],slotMachine.dimension[1])
 
     def clear(self,screen):
         screen.fill('black')
@@ -65,7 +56,7 @@ class ViewSlotMachine:
                         
                     self.slideIn(screen, currentViewSymbol, cols ,rows,cols-i-1, rows-j-1)
             
-            self.playReelStopSound(i)
+            self.soundPlayer.playReelStopSound(i)
 
         if self.spinFinished and self.currentTable[0][0] != 0:
             self.checkWins()
@@ -99,37 +90,6 @@ class ViewSlotMachine:
                 self.bonusOn = True
                 self.freeSpins = bonusCounter
 
-    def displayFreeSpins(self,screen):
-        # create a font object.
-        # 1st parameter is the font file
-        # which is present in pygame.
-        # 2nd parameter is size of the font
-        font = pygame.font.Font('freesansbold.ttf', 32)
-
-        # create a text surface object,
-        # on which text is drawn on it.
-        bottom_text = font.render(f"Free Spins: {self.freeSpins}",True,"green")
-        text_width, text_height = font.size(f"{self.freeSpins} Free Spins")
-        screen.blit(bottom_text,(780-text_width/2,700-text_height/2)) 
-
-    def displayBonusScreen(self,screen):
-        # create a font object.
-        # 1st parameter is the font file
-        # which is present in pygame.
-        # 2nd parameter is size of the font
-        font = pygame.font.Font('freesansbold.ttf', 100)
-        
-        # create a text surface object,
-        # on which text is drawn on it.
-        top_text = font.render(f"BONUS GAME", True,"green","black")
-        text_width, text_height = font.size("Bonus Game")
-        screen.blit(top_text,(450-text_width/2,300-text_height/2)) 
-
-        font = pygame.font.Font('freesansbold.ttf', 60)
-        bottom_text = font.render(f"You won {self.freeSpins} free spins!",True,"green","black")
-        text_width, text_height = font.size(f"You won {self.freeSpins} free spins!")
-        screen.blit(bottom_text,(500-text_width/2,400-text_height/2)) 
-
     def slideIn(self,screen, symbol, cols, rows, i ,j):
         if self.type == "reel":
             movingValue = round(self.animSprite*self.tileSize*self.currentSpeed) - (rows*(j-1)*self.tileSize)/rows -((i+1)*cols*self.tileSize)*(4/5)
@@ -143,11 +103,11 @@ class ViewSlotMachine:
         else:
             symbol.x = 93 + i * self.tileSize * 1.35
             symbol.y = 104 + (rows-j-1)*self.tileSize
-            if j == rows-1:
-                if not self.hasPlayedSoundREEL[i]:
-                    self.readyToPlaySoundREEL[i] = True
-                    
-                self.playWildSound(i)
+        
+            # if reel stopped to play the wild sounds if there is any
+            if self.soundPlayer.checkIfReelStopped(j,rows,i):
+                self.soundPlayer.playWildSound(i,rows-j-1,self.bonusWildisOut[i][rows-j-1])
+
             if i == cols-1 and j == rows-1:
                 self.spinFinished = True
 
@@ -156,14 +116,15 @@ class ViewSlotMachine:
         symbol.y -= (symbol.symbolSize-self.tileSize)  / 2
 
         if symbol.symbol.name == "wild":
-            if not self.hasPlayedSoundWILD[i]:
-                self.readyToPlaySoundWILD[i] = True
+            
+            self.soundPlayer.checkIfPlayedWildSound(i,rows-j-1)
 
             if ((i,rows-j-1)) in self.bonusWildSlots:
                 if not self.bonusWildisOut[i][rows-j-1]:
                     
                     if self.spinFinished:
                         self.bonusWildisOut[i][rows-j-1] = True
+                        
                         
                 else:
                     symbol.x = 93 + i * self.tileSize * 1.35
@@ -173,7 +134,6 @@ class ViewSlotMachine:
                     screen.blit(symbol.image,[symbol.x,symbol.y])
 
                     return
-        
 
         screen.blit(symbol.image,[symbol.x,symbol.y])
 
@@ -283,77 +243,6 @@ class ViewSlotMachine:
         if len(self.account.wonAmounts) > 0:
             self.displayWinCount(screen, self.account.wonAmounts)
 
-    def displayBonusTotalWin(self,screen):
-        # create a font object.
-        # 1st parameter is the font file
-        # which is present in pygame.
-        # 2nd parameter is size of the font
-        font = pygame.font.Font('freesansbold.ttf', 28)
-        
-        # create a text surface object,
-        # on which text is drawn on it. 
-        if self.bonusOn:
-            text = font.render(f"Total Won: {self.account.bonusTotalWin}", True,"gold")
-            screen.blit(text,(400,710)) 
-
-    def displayWinCount(self,screen, amounts):
-        # create a font object.
-        # 1st parameter is the font file
-        # which is present in pygame.
-        # 2nd parameter is size of the font
-        font = pygame.font.Font('freesansbold.ttf', 28)
-        
-        # create a text surface object,
-        # on which text is drawn on it.
-        amount = 0
-        for elem in list(amounts.values()):
-            amount += elem
-        text = font.render(f"Won: {amount}", True,"gold")
-        screen.blit(text,(420,670))  
-        
-
-    def setLines(self,amount):
-        line1 = Line("line1", [(0,0),(0,1),(0,2),(0,3),(0,4)])
-        line2 = Line("line2",[(1,0),(1,1),(1,2),(1,3),(1,4)])
-        line3 = Line("line3",[(2,0),(2,1),(2,2),(2,3),(2,4)])
-        line4 = Line("line4",[(3,0),(3,1),(3,2),(3,3),(3,4)])
-
-        line5 = Line("line5",[(0,0),(1,1),(2,2),(1,3),(0,4)])
-        line6 = Line("line6",[(1,0),(2,1),(3,2),(2,3),(1,4)])
-        line7 = Line("line7",[(3,0),(2,1),(1,2),(2,3),(3,4)])
-        line8 = Line("line8",[(2,0),(1,1),(0,2),(1,3),(2,4)])
-
-        line9 = Line("line9",[(0,0),(1,1),(0,2),(1,3),(0,4)])
-        line10= Line("line10",[(3,0),(2,1),(3,2),(2,3),(3,4)])
-        line11= Line("line11",[(1,0),(0,1),(1,2),(0,3),(1,4)])
-        line12= Line("line12",[(2,0),(3,1),(2,2),(3,3),(2,4)])
-        line13= Line("line13",[(1,0),(2,1),(1,2),(2,3),(1,4)])
-        line14= Line("line14",[(2,0),(1,1),(2,2),(1,3),(2,4)])
-
-        line15= Line("line15",[(0,0),(1,1),(1,2),(1,3),(0,4)])
-        line16= Line("line16",[(3,0),(2,1),(2,2),(2,3),(3,4)])
-        line17= Line("line17",[(1,0),(0,1),(0,2),(0,3),(1,4)])
-        line18= Line("line18",[(2,0),(3,1),(3,2),(3,3),(2,4)])
-        line19= Line("line19",[(1,0),(2,1),(2,2),(2,3),(1,4)])
-        line20= Line("line20",[(2,0),(1,1),(1,2),(1,3),(2,4)])
-
-        line21= Line("line21",[(1,0),(1,1),(0,2),(1,3),(1,4)])
-        line22= Line("line22",[(2,0),(2,1),(1,2),(2,3),(2,4)])
-        line23= Line("line23",[(3,0),(3,1),(2,2),(3,3),(3,4)])
-        line24= Line("line24",[(0,0),(0,1),(1,2),(0,3),(0,4)])
-        line25= Line("line25",[(1,0),(1,1),(2,2),(1,3),(1,4)])
-        line26= Line("line26",[(2,0),(2,1),(3,2),(2,3),(2,4)])
-
-
-        lines = [line1,line2,line3,line4,line5,
-                 line6,line7,line8,line9,line10,
-                 line11,line12,line13,line14,line15,
-                 line16,line17,line18,line19,line20,
-                 line21,line22,line23,line24,line25,
-                 line26]
-        
-        return lines[:amount]
-
     def displayWins(self, screen):
         # DRAW LINES
         if len(self.winLines) > 0:
@@ -402,50 +291,86 @@ class ViewSlotMachine:
 
                 self.displayLineWin(screen,line)
             
+
+    def displayTextToScreen(self, screen, text, x, y):
+        # 1st parameter is the screen to draw on
+        # 2nd parameter is the font file
+        # 3rd parameter is the text to display
+
+        screen.blit(text, (x, y))
+
+    def displayFreeSpins(self,screen):
+        font = pygame.font.Font('freesansbold.ttf', 32)
+        text = font.render(f"Free Spins: {self.freeSpins}",True,"green")
+        text_width, text_height = font.size(f"{self.freeSpins} Free Spins")
+
+        x = 780-text_width/2
+        y = 700-text_height/2
+
+        self.displayTextToScreen(screen,text,x,y) 
+
+    def displayBonusScreen(self,screen):
+        font = pygame.font.Font('freesansbold.ttf', 100)
+
+        # Top text
+        top_text = font.render(f"BONUS GAME", True,"green","black")
+        text_width, text_height = font.size("Bonus Game")
+        x1 = 450-text_width/2
+        y1 = 300-text_height/2
+        self.displayTextToScreen(screen,top_text,x1,y1)
+
+        # Bottom text
+        font = pygame.font.Font('freesansbold.ttf', 60)
+        bottom_text = font.render(f"You won {self.freeSpins} free spins!",True,"green","black")
+        text_width, text_height = font.size(f"You won {self.freeSpins} free spins!")
+        x2 = 500-text_width/2
+        y2 = 400-text_height/2
+
+        self.displayTextToScreen(screen,bottom_text,x2,y2)
+    
     def displayLineWin(self,screen,line):
-        # create a font object.
-        # 1st parameter is the font file
-        # which is present in pygame.
-        # 2nd parameter is size of the font
         font = pygame.font.Font('freesansbold.ttf', 50)
-        
-        # create a text surface object,
-        # on which text is drawn on it.
+
         text = font.render(f"{self.account.wonAmounts.get(line.name)}", True,"gold","black")
         text_width, text_height = font.size(f"{self.account.wonAmounts.get(line.name)}")
         x = 93 + line.line[2][1] * self.tileSize * 1.35 + self.tileSize/2 - text_width/2
         y = 104 + line.line[2][0] * self.tileSize + self.tileSize/2
 
-        screen.blit(text,(x,y))  
+        self.displayTextToScreen(screen,text,x,y)
     
-
     def displayBalance(self,screen):
-        # create a font object.
-        # 1st parameter is the font file
-        # which is present in pygame.
-        # 2nd parameter is size of the font
         font = pygame.font.Font('freesansbold.ttf', 32)
-        
-        # create a text surface object,
-        # on which text is drawn on it.
-        text = font.render(f"Balance: {self.account.balance}", True, "black", "gold")
-        screen.blit(text,(100,680))    
 
-    
-    def playReelStopSound(self, i):
+        text = font.render(f"Balance: {self.account.balance}", True, "black", "gold")
+        x = 100
+        y = 680
+
+        self.displayTextToScreen(screen,text,x,y)
+
+    def displayBonusTotalWin(self,screen):
+        font = pygame.font.Font('freesansbold.ttf', 28)
+
+        if self.bonusOn:
+            text = font.render(f"Total Won: {self.account.bonusTotalWin}", True,"gold")
+            x = 400
+            y = 710
+
+            self.displayTextToScreen(screen,text,x,y)
+
+    def displayWinCount(self,screen, amounts):
+        font = pygame.font.Font('freesansbold.ttf', 28)
         
-        if self.readyToPlaySoundREEL[i] and not self.mute:
-            self.reelStopSound.play()
-            self.readyToPlaySoundREEL[i] = False
-            self.hasPlayedSoundREEL[i] = True
-    
-    def playWildSound(self,i):
-        if self.readyToPlaySoundWILD[i] and not self.mute:
-            self.reelWildSound.play()
-            self.readyToPlaySoundWILD[i] = False
-            self.hasPlayedSoundWILD[i] = True
+        amount = 0
+        for elem in list(amounts.values()):
+            amount += elem
+        text = font.render(f"Won: {amount}", True,"gold")
+        x = 420
+        y = 670
+
+        self.displayTextToScreen(screen,text,x,y)
 
     def spin(self):
         print("Needs to be overwriten 'spin()' ")
 
-
+    def setLines(self,amount):
+        print("Needs to be overwritten: 'setLines(self,amount)'")
