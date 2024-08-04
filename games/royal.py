@@ -25,12 +25,12 @@ class GG(ViewSlotMachine):
         self.animSprite = 0
         self.bonusScreen = False
         # SOUND
-        self.soundPlayer.resetReelSounds(self.slotMachine.dimension[0],self.slotMachine.dimension[1])
+        self.soundPlayer.resetReelSounds(self.slotMachine.cols,self.slotMachine.rows)
     
     def resetBonusValues(self):
         self.freeSpins = 0
         self.bonusOn = False
-        self.bonusWildisOut = [[False]*self.slotMachine.dimension[1] for _ in range(self.slotMachine.dimension[0])]
+        self.bonusWildisOut = [[False]*self.slotMachine.rows for _ in range(self.slotMachine.cols)]
         self.bonusWildSlots = []
 
     def spin(self):
@@ -52,10 +52,8 @@ class GG(ViewSlotMachine):
         self.account.won(self.account.wonAmount)
 
     def setCurrentTable(self):
-        cols = self.slotMachine.dimension[0]
-        rows = self.slotMachine.dimension[1]
-        for i in range(cols):
-            for j in range(rows):
+        for i in range(self.slotMachine.cols):
+            for j in range(self.slotMachine.rows):
                 
                 currentViewSymbol = None
                 if ((i,j)) in  self.bonusWildSlots:
@@ -102,7 +100,7 @@ class GG(ViewSlotMachine):
                         if currentSymbol.name == "scatter":
                             currentViewSymbol = self.scatter
 
-                self.currentTable[i][rows-j-1] = currentViewSymbol
+                self.currentTable[i][self.slotMachine.rows-j-1] = currentViewSymbol
 
     def setLines(self,amount):
         line1 = Line("line1", [(0,0),(0,1),(0,2),(0,3),(0,4)])

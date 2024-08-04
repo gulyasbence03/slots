@@ -41,7 +41,7 @@ class Game:
                             
 
             self.spinLock = self.slot.display(self.screen)
-            self.slot.animSprite+= self.slot.slotMachine.dimension[0]/8
+            self.slot.animSprite+= self.slot.slotMachine.cols/8
             pygame.display.update()
 
     def setSpinLock(self):

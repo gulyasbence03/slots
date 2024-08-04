@@ -27,14 +27,14 @@ class ViewSlotMachine:
         self.spinFinished = True
 
         # Sound
-        self.soundPlayer = SoundPlayer(slotMachine.dimension[0],slotMachine.dimension[1])
+        self.soundPlayer = SoundPlayer(slotMachine.cols,slotMachine.rows)
 
         # Bonusgame
         self.bonusOn = False
         self.bonusScreen = False
         self.freeSpins = 0
         self.bonusWildSlots = []
-        self.bonusWildisOut = [[False]*slotMachine.dimension[1] for _ in range(slotMachine.dimension[0])]
+        self.bonusWildisOut = [[False]*slotMachine.rows for _ in range(slotMachine.cols)]
 
     def clearScreen(self,screen):
         screen.fill('black')
@@ -46,15 +46,13 @@ class ViewSlotMachine:
             self.displayBonusScreen(screen)
             return not self.spinFinished
 
-        cols = self.slotMachine.dimension[0]
-        rows = self.slotMachine.dimension[1]
-        for i in range(cols):
-            for j in range(rows):
-                currentViewSymbol = self.currentTable[cols-i-1][rows-j-1]
+        for i in range(self.slotMachine.cols):
+            for j in range(self.rows):
+                currentViewSymbol = self.currentTable[self.slotMachine.cols-i-1][self.slotMachine.rows-j-1]
                 if currentViewSymbol is not None and currentViewSymbol != 0:
                     currentViewSymbol.image = pygame.transform.scale(currentViewSymbol.image,[currentViewSymbol.symbolSize,currentViewSymbol.symbolSize])
                         
-                    self.slideIn(screen, currentViewSymbol, cols ,rows,cols-i-1, rows-j-1)
+                    self.slideIn(screen, currentViewSymbol, self.slotMachine.cols ,self.slotMachine.rows,self.slotMachine.cols-i-1, self.slotMachine.rows-j-1)
             
             self.soundPlayer.playReelStopSound(i)
 
@@ -75,12 +73,9 @@ class ViewSlotMachine:
         # Bonus Game
         if not self.bonusOn:
             bonusCounter = 0
-
-            cols = self.slotMachine.dimension[0]
-            rows = self.slotMachine.dimension[1]
-            for i in range(cols):
-                for j in range(rows):
-                    currentViewSymbol = self.currentTable[cols-i-1][rows-j-1]
+            for i in range(self.slotMachine.cols):
+                for j in range(self.slotMachine.rows):
+                    currentViewSymbol = self.currentTable[self.slotMachine.cols-i-1][self.slotMachine.rows-j-1]
                     if currentViewSymbol is not None and currentViewSymbol != 0:
                         if currentViewSymbol.symbol.name == "scatter":
                             bonusCounter+=1
@@ -145,11 +140,10 @@ class ViewSlotMachine:
         self.winLines = winners
 
     def isWinner(self,line):
-        rows = self.slotMachine.dimension[1]
         # all symbols in given line
         symbolsInLine = []
         for elem in line.line:
-            symbolsInLine.append(self.currentTable[elem[1]][rows-elem[0]-1].symbol)
+            symbolsInLine.append(self.currentTable[elem[1]][self.slotMachine.rows-elem[0]-1].symbol)
         symbolsInLine = Counter(symbolsInLine).most_common()
         # sort symbol types by amount, so bigger chance for
         sortedSymbols = []
@@ -159,11 +153,11 @@ class ViewSlotMachine:
         
         for symbol in sortedSymbols:
             
-            first = self.currentTable[line.line[0][1]][rows-line.line[0][0]-1]
-            second = self.currentTable[line.line[1][1]][rows-line.line[1][0]-1]
-            third = self.currentTable[line.line[2][1]][rows-line.line[2][0]-1]
-            fourth = self.currentTable[line.line[3][1]][rows-line.line[3][0]-1]
-            fifth = self.currentTable[line.line[4][1]][rows-line.line[4][0]-1]
+            first = self.currentTable[line.line[0][1]][self.slotMachine.rows-line.line[0][0]-1]
+            second = self.currentTable[line.line[1][1]][self.slotMachine.rows-line.line[1][0]-1]
+            third = self.currentTable[line.line[2][1]][self.slotMachine.rows-line.line[2][0]-1]
+            fourth = self.currentTable[line.line[3][1]][self.slotMachine.rows-line.line[3][0]-1]
+            fifth = self.currentTable[line.line[4][1]][self.slotMachine.rows-line.line[4][0]-1]
             
             symbolName = symbol.name
 
@@ -179,19 +173,19 @@ class ViewSlotMachine:
                         if fifth.symbol.name in [symbolName,"wild"]:
                             #print(f"X X X X X {symbolName}")
                             
-                            temp_list.append((line.line[0][1],rows-line.line[0][0]-1))
-                            temp_list.append((line.line[1][1],rows-line.line[1][0]-1))
-                            temp_list.append((line.line[2][1],rows-line.line[2][0]-1))
-                            temp_list.append((line.line[3][1],rows-line.line[3][0]-1))
-                            temp_list.append((line.line[4][1],rows-line.line[4][0]-1))   
+                            temp_list.append((line.line[0][1],self.slotMachine.rows-line.line[0][0]-1))
+                            temp_list.append((line.line[1][1],self.slotMachine.rows-line.line[1][0]-1))
+                            temp_list.append((line.line[2][1],self.slotMachine.rows-line.line[2][0]-1))
+                            temp_list.append((line.line[3][1],self.slotMachine-line.line[3][0]-1))
+                            temp_list.append((line.line[4][1],self.slotMachine-line.line[4][0]-1))   
                             self.selectedSymbols[line.name] = temp_list
                             return True
                         else:
                             #print(f"X X X X - {symbolName}")
-                            temp_list.append((line.line[0][1],rows-line.line[0][0]-1))
-                            temp_list.append((line.line[1][1],rows-line.line[1][0]-1))
-                            temp_list.append((line.line[2][1],rows-line.line[2][0]-1))
-                            temp_list.append((line.line[3][1],rows-line.line[3][0]-1)) 
+                            temp_list.append((line.line[0][1],self.slotMachine-line.line[0][0]-1))
+                            temp_list.append((line.line[1][1],self.slotMachine-line.line[1][0]-1))
+                            temp_list.append((line.line[2][1],self.slotMachine-line.line[2][0]-1))
+                            temp_list.append((line.line[3][1],self.slotMachine-line.line[3][0]-1)) 
                             self.selectedSymbols[line.name] = temp_list
                             
                             return True
@@ -205,10 +199,10 @@ class ViewSlotMachine:
                 # first 5 symbol or wild
                 if fifth.symbol.name in [symbolName,"wild"]:
                     #print(f"- X X X X {symbolName}")
-                    temp_list.append((line.line[1][1],rows-line.line[1][0]-1))
-                    temp_list.append((line.line[2][1],rows-line.line[2][0]-1))
-                    temp_list.append((line.line[3][1],rows-line.line[3][0]-1))
-                    temp_list.append((line.line[4][1],rows-line.line[4][0]-1))  
+                    temp_list.append((line.line[1][1],self.slotMachine-line.line[1][0]-1))
+                    temp_list.append((line.line[2][1],self.slotMachine-line.line[2][0]-1))
+                    temp_list.append((line.line[3][1],self.slotMachine-line.line[3][0]-1))
+                    temp_list.append((line.line[4][1],self.slotMachine-line.line[4][0]-1))  
                     self.selectedSymbols[line.name] = temp_list
                     
                     return True
@@ -264,7 +258,7 @@ class ViewSlotMachine:
                     symbol = self.currentTable[elem[0],elem[1]]
 
                     originX = 93 + elem[0] * self.tileSize * 1.35 
-                    originY = 105 + (self.slotMachine.dimension[1]-elem[1]-1)*self.tileSize
+                    originY = 105 + (self.slotMachine.rows-elem[1]-1)*self.tileSize
 
                     outlineX = originX - (symbol.symbolSize*0.8-self.tileSize)  / 2
                     outlineY = originY - (symbol.symbolSize*0.8-self.tileSize)  / 2
@@ -296,7 +290,6 @@ class ViewSlotMachine:
         # 1st parameter is the screen to draw on
         # 2nd parameter is the font file
         # 3rd parameter is the text to display
-
         screen.blit(text, (x, y))
 
     def displayFreeSpins(self,screen):
