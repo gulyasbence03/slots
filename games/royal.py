@@ -57,9 +57,8 @@ class GG(ViewSlotMachine):
                 
                 currentViewSymbol = None
                 if ((i,j)) in  self.bonusWildSlots:
-                    currentSymbol = self.wild.symbol
-                else:
-                    currentSymbol = self.slotMachine.getElement(i,j)
+                    self.slotMachine.setElement(i,j,self.wild.symbol)
+                currentSymbol = self.slotMachine.getElement(i,j)
 
                 if currentSymbol is not None:
                     #print(currentSymbol.name)

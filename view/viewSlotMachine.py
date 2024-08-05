@@ -59,7 +59,13 @@ class ViewSlotMachine:
         if self.spinFinished and self.currentTable[0][0] != 0:
             self.checkWins()
             self.countWins(screen)
-            self.checkBonus()
+            
+            numberOfScatters = self.slotMachine.checkBonus(self.bonusOn)
+            if numberOfScatters >= 3:
+                self.bonusScreen = True
+                self.bonusOn = True
+                self.freeSpins = numberOfScatters
+
             self.displayWins(screen)
 
         self.displayBalance(screen)
@@ -69,21 +75,7 @@ class ViewSlotMachine:
 
         return not self.spinFinished
 
-    def checkBonus(self):
-        # Bonus Game
-        if not self.bonusOn:
-            bonusCounter = 0
-            for i in range(self.slotMachine.cols):
-                for j in range(self.slotMachine.rows):
-                    currentViewSymbol = self.currentTable[self.slotMachine.cols-i-1][self.slotMachine.rows-j-1]
-                    if currentViewSymbol is not None and currentViewSymbol != 0:
-                        if currentViewSymbol.symbol.name == "scatter":
-                            bonusCounter+=1
 
-            if bonusCounter >= 3:
-                self.bonusScreen = True
-                self.bonusOn = True
-                self.freeSpins = bonusCounter
 
     def slideIn(self,screen, symbol, cols, rows, i ,j):
         if self.type == "reel":
