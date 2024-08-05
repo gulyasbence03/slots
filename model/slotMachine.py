@@ -9,7 +9,7 @@ class SlotMachine:
         self.cols = dimension[0]
         self.rows = dimension[1]
 
-        self.reels = np.empty(self.cols,symbolsOnReel,dtype=Symbol)
+        self.reels = np.empty((self.cols,symbolsOnReel),dtype=Symbol)
         self.table = np.empty(dimension,dtype=Symbol)
 
     def setReels(self, listOfReels):

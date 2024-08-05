@@ -23,7 +23,7 @@ class ViewSlotMachine:
         self.defaultSpeed = speed
         self.currentSpeed = speed
         self.animSprite = 0
-        self.currentTable = np.zeros(slotMachine.dimension, dtype=ViewSymbol)
+        self.currentTable = np.zeros((slotMachine.cols,slotMachine.rows), dtype=ViewSymbol)
         self.spinFinished = True
 
         # Sound
@@ -47,7 +47,7 @@ class ViewSlotMachine:
             return not self.spinFinished
 
         for i in range(self.slotMachine.cols):
-            for j in range(self.rows):
+            for j in range(self.slotMachine.rows):
                 currentViewSymbol = self.currentTable[self.slotMachine.cols-i-1][self.slotMachine.rows-j-1]
                 if currentViewSymbol is not None and currentViewSymbol != 0:
                     currentViewSymbol.image = pygame.transform.scale(currentViewSymbol.image,[currentViewSymbol.symbolSize,currentViewSymbol.symbolSize])
@@ -176,16 +176,16 @@ class ViewSlotMachine:
                             temp_list.append((line.line[0][1],self.slotMachine.rows-line.line[0][0]-1))
                             temp_list.append((line.line[1][1],self.slotMachine.rows-line.line[1][0]-1))
                             temp_list.append((line.line[2][1],self.slotMachine.rows-line.line[2][0]-1))
-                            temp_list.append((line.line[3][1],self.slotMachine-line.line[3][0]-1))
-                            temp_list.append((line.line[4][1],self.slotMachine-line.line[4][0]-1))   
+                            temp_list.append((line.line[3][1],self.slotMachine.rows-line.line[3][0]-1))
+                            temp_list.append((line.line[4][1],self.slotMachine.rows-line.line[4][0]-1))   
                             self.selectedSymbols[line.name] = temp_list
                             return True
                         else:
                             #print(f"X X X X - {symbolName}")
-                            temp_list.append((line.line[0][1],self.slotMachine-line.line[0][0]-1))
-                            temp_list.append((line.line[1][1],self.slotMachine-line.line[1][0]-1))
-                            temp_list.append((line.line[2][1],self.slotMachine-line.line[2][0]-1))
-                            temp_list.append((line.line[3][1],self.slotMachine-line.line[3][0]-1)) 
+                            temp_list.append((line.line[0][1],self.slotMachine.rows-line.line[0][0]-1))
+                            temp_list.append((line.line[1][1],self.slotMachine.rows-line.line[1][0]-1))
+                            temp_list.append((line.line[2][1],self.slotMachine.rows-line.line[2][0]-1))
+                            temp_list.append((line.line[3][1],self.slotMachine.rows-line.line[3][0]-1)) 
                             self.selectedSymbols[line.name] = temp_list
                             
                             return True
@@ -199,10 +199,10 @@ class ViewSlotMachine:
                 # first 5 symbol or wild
                 if fifth.symbol.name in [symbolName,"wild"]:
                     #print(f"- X X X X {symbolName}")
-                    temp_list.append((line.line[1][1],self.slotMachine-line.line[1][0]-1))
-                    temp_list.append((line.line[2][1],self.slotMachine-line.line[2][0]-1))
-                    temp_list.append((line.line[3][1],self.slotMachine-line.line[3][0]-1))
-                    temp_list.append((line.line[4][1],self.slotMachine-line.line[4][0]-1))  
+                    temp_list.append((line.line[1][1],self.slotMachine.rows-line.line[1][0]-1))
+                    temp_list.append((line.line[2][1],self.slotMachine.rows-line.line[2][0]-1))
+                    temp_list.append((line.line[3][1],self.slotMachine.rows-line.line[3][0]-1))
+                    temp_list.append((line.line[4][1],self.slotMachine.rows-line.line[4][0]-1))  
                     self.selectedSymbols[line.name] = temp_list
                     
                     return True
