@@ -7,49 +7,20 @@ from account import *
 class GG(ViewSlotMachine):
     def __init__(self):
         machine = SlotMachine((5,4),34+2)
-        account = Account(1000)
-        ViewSlotMachine.__init__(self,machine,'assets/background.png',128,"reel",0.38,account)
+        account = Account(balance=1000,baseBet=1)
+        ViewSlotMachine.__init__(self,machine,128,"reel",0.38,account)
         self.loadReels()
         self.slotMachine.setReels(self.reels)
+        self.slotMachine.lines = self.setLines(26)
+        self.lines = self.setLines(26)
+
+        self.background = pygame.image.load('assets/background.png')
+        self.background = pygame.transform.scale(self.background,[910,600])
 
         self.soundPlayer.setReelStopSound(pygame.mixer.Sound("assets/reelstop.wav"))
         self.soundPlayer.setWildSound(pygame.mixer.Sound("assets/wild.wav"))
 
-    def resetValuesWithSpin(self):
-        # LOGIC
-        self.spinFinished = False
-        self.account.wonAmounts = {}
-        self.isWinCounted = False
-        self.selectedSymbols = {}
-        # VISUAL
-        self.animSprite = 0
-        self.bonusScreen = False
-        # SOUND
-        self.soundPlayer.resetReelSounds(self.slotMachine.cols,self.slotMachine.rows)
-    
-    def resetBonusValues(self):
-        self.freeSpins = 0
-        self.bonusOn = False
-        self.bonusWildisOut = [[False]*self.slotMachine.rows for _ in range(self.slotMachine.cols)]
-        self.bonusWildSlots = []
-
-    def spin(self):
-        if self.account.balance < self.account.betAmount:
-            print("Insufficient balance to bet")
-            return
-        
-        if self.freeSpins <= 0:
-            self.resetBonusValues()
-            self.account.addBonusToBalance()
-            self.account.bet(self.account.betAmount)
-        else:
-            self.freeSpins-=1
-
-        self.resetValuesWithSpin()
-        self.slotMachine.spin()
-        self.setCurrentTable()
-
-        self.account.won(self.account.wonAmount)
+    # - - - - - - - - - - - - - - - - - - I N I T I A L I Z E - - - - - - - - - - - - - - - -
 
     def setCurrentTable(self):
         for i in range(self.slotMachine.cols):
@@ -61,7 +32,6 @@ class GG(ViewSlotMachine):
                 currentSymbol = self.slotMachine.getElement(i,j)
 
                 if currentSymbol is not None:
-                    #print(currentSymbol.name)
                     if isinstance(currentSymbol,FaceSymbol):
                         if currentSymbol.name == "swords":
                             currentViewSymbol = self.swords
@@ -92,7 +62,6 @@ class GG(ViewSlotMachine):
                             if self.bonusOn and (i,j) not in self.bonusWildSlots:
                                 self.bonusWildSlots.append((i,j))
                                 self.freeSpins+=1
-                                
                                 
 
                     if isinstance(currentSymbol, ScatterSymbol):
@@ -176,8 +145,10 @@ class GG(ViewSlotMachine):
             test_reel3.append(self.scatter.symbol)
             test_reel4.append(self.scatter.symbol)
             test_reel5.append(self.scatter.symbol)
-        # --------------------------------------------
+        
         self.reels = [test_reel1,test_reel2,test_reel3,test_reel4,test_reel5]
+        # --------------------------------------------
+        # self.reels = [reel1,reel2,reel3,reel4,reel5]
 
     def createReel(self,tens,jacks,queens,kings,aces,crowns,helmets,swords_s,wilds, scatters):
         reel = []
@@ -193,4 +164,215 @@ class GG(ViewSlotMachine):
         reel += [self.scatter.symbol] * scatters
         
         return reel
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+    # - - - - - - - - - - S P I N   L O G I C - - - - - - - - - - 
+
+    def spin(self):
+        if self.account.balance < self.account.betAmount:
+            print("Insufficient balance to bet")
+            return
+        
+        if self.freeSpins <= 0:
+            self.resetBonusValues()
+            self.account.addBonusToBalance()
+            self.account.bet(self.account.betAmount)
+        else:
+            self.freeSpins-=1
+
+        self.resetValuesWithSpin()
+        self.slotMachine.spin()
+        self.setCurrentTable()
+
+        self.account.won(self.account.wonAmount)
     
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+    # - - - - - - - - - - - R E S E T I N G   V A L U E S - - - - - - - - - - -
+    def resetValuesWithSpin(self):
+        # LOGIC
+        self.spinFinished = False
+        self.account.wonAmounts = {}
+
+        self.slotMachine.isWinCounted = False
+        self.slotMachine.selectedSymbols = {}
+        # VISUAL
+        self.animSprite = 0
+        self.bonusScreen = False
+        # SOUND
+        self.soundPlayer.resetReelSounds(self.slotMachine.cols,self.slotMachine.rows)
+    
+    def resetBonusValues(self):
+        self.freeSpins = 0
+        self.bonusOn = False
+        self.bonusWildisOut = [[False]*self.slotMachine.rows for _ in range(self.slotMachine.cols)]
+        self.bonusWildSlots = []
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    
+
+    # - - - - - - - - - - - - - - - - - - - V I S U A L - - - - - - - - - - - - - - - - - - - - 
+
+    def slideIn(self,screen, symbol, cols, rows, i ,j):
+        if self.type == "reel":
+            movingValue = round(self.animSprite*self.tileSize*self.currentSpeed) - (rows*(j-1)*self.tileSize)/rows -((i+1)*cols*self.tileSize)*(4/5)
+        elif self.type == "piece":    
+            movingValue = self.animSprite*0.8*self.tileSize*self.currentSpeed - (rows*(j-1)*self.tileSize)*(2/5)-((i+3)*cols*self.tileSize)/3
+
+
+        if  movingValue < (rows-j-1)*self.tileSize:
+            symbol.x = 93 + i * self.tileSize * 1.35
+            symbol.y = 104 + movingValue
+        else:
+            symbol.x = 93 + i * self.tileSize * 1.35
+            symbol.y = 104 + (rows-j-1)*self.tileSize
+        
+            # if reel stopped to play the wild sounds if there is any
+            if self.soundPlayer.checkIfReelStopped(j,rows,i):
+                self.soundPlayer.playWildSound(i,rows-j-1,self.bonusWildisOut[i][rows-j-1])
+
+            if i == cols-1 and j == rows-1:
+                self.spinFinished = True
+
+        
+        symbol.x -= (symbol.symbolSize-self.tileSize)  / 2
+        symbol.y -= (symbol.symbolSize-self.tileSize)  / 2
+
+        if symbol.symbol.name == "wild":
+            
+            self.soundPlayer.checkIfPlayedWildSound(i,rows-j-1)
+
+            if ((i,rows-j-1)) in self.bonusWildSlots:
+                if not self.bonusWildisOut[i][rows-j-1]:
+                    
+                    if self.spinFinished:
+                        self.bonusWildisOut[i][rows-j-1] = True
+                        
+                        
+                else:
+                    symbol.x = 93 + i * self.tileSize * 1.35
+                    symbol.y = 104 + (rows-j-1)*self.tileSize
+                    symbol.x -= (symbol.symbolSize-self.tileSize)  / 2
+                    symbol.y -= (symbol.symbolSize-self.tileSize)  / 2
+                    screen.blit(symbol.image,[symbol.x,symbol.y])
+
+                    return
+
+        screen.blit(symbol.image,[symbol.x,symbol.y])
+    
+    def displayWins(self, screen):
+        # DRAW LINES
+        if len(self.slotMachine.winLines) > 0:
+
+            line = self.slotMachine.winLines[int((self.animSprite/30) % len(self.slotMachine.winLines))]
+            for i in range(len(line.line)-1):
+                start = (93 + line.line[i][1] * self.tileSize * 1.35 + self.tileSize/2,
+                            104 + line.line[i][0] * self.tileSize + self.tileSize/2)  
+                end = (93 + line.line[i+1][1] * self.tileSize * 1.35 + self.tileSize/2,
+                            104 + line.line[i+1][0] * self.tileSize + self.tileSize/2)
+
+                pygame.draw.line(screen,"gold",start,end,7)
+
+                # ANIMATE SYMBOLS
+                currLine = self.slotMachine.selectedSymbols[line.name]
+                for elem in currLine:       
+                    symbol = self.currentTable[elem[0],self.slotMachine.rows - elem[1] -1]
+
+                    originX = 93 + elem[0] * self.tileSize * 1.35 
+                    originY = 105 + (elem[1])*self.tileSize
+
+                    outlineX = originX - (symbol.symbolSize*0.8-self.tileSize)  / 2
+                    outlineY = originY - (symbol.symbolSize*0.8-self.tileSize)  / 2
+
+                    originX -= (symbol.symbolSize-self.tileSize)  / 2
+                    originY -= (symbol.symbolSize-self.tileSize)  / 2
+
+
+                    tempSurface = pygame.Surface((symbol.symbolSize,symbol.symbolSize),pygame.SRCALPHA)
+                    tempSurface.set_alpha(35) 
+
+                    x = originX
+                    y = originY
+                    if symbol.symbol.name == "wild":
+                        tempSurface.set_alpha(75) 
+                        pygame.draw.rect(tempSurface,pygame.Color(220,20,60),pygame.Rect(1,15,symbol.symbolSize*0.8,symbol.symbolSize*0.8))
+                        x = outlineX
+                        y = outlineY-20
+                    else:
+                        pygame.draw.circle(tempSurface,pygame.Color(220,20,60),[symbol.symbolSize*0.5,symbol.symbolSize*0.5],symbol.symbolSize*0.5)
+                    screen.blit(tempSurface,(x,y))
+                    screen.blit(symbol.image, [originX,originY])
+
+                self.displayLineWin(screen,line)
+    
+    def displayBalance(self,screen):
+        font = pygame.font.Font('freesansbold.ttf', 32)
+
+        text = font.render(f"Balance: ${format(self.account.balance, '.1f')}", True, "black", "gold")
+        x = 100
+        y = 680
+
+        self.displayTextToScreen(screen,text,x,y)
+
+    def displayWinCount(self,screen, amounts):
+        font = pygame.font.Font('freesansbold.ttf', 28)
+        
+        amount = 0
+        for elem in list(amounts.values()):
+            amount += elem
+        text = font.render(f"Won: ${format(amount, '.1f')}", True,"gold")
+        x = 420
+        y = 670
+
+        self.displayTextToScreen(screen,text,x,y)
+    
+    def displayBonusTotalWin(self,screen):
+        font = pygame.font.Font('freesansbold.ttf', 28)
+
+        if self.bonusOn:
+            text = font.render(f"Total Won: ${format(self.account.bonusTotalWin, '.1f')}", True,"gold")
+            x = 400
+            y = 710
+
+            self.displayTextToScreen(screen,text,x,y)
+    
+    def displayLineWin(self,screen,line):
+        font = pygame.font.Font('freesansbold.ttf', 50)
+
+        text = font.render(f"{format(self.account.wonAmounts.get(line.name),'.1f')}", True,"gold","black")
+        text_width, text_height = font.size(f"{format(self.account.wonAmounts.get(line.name),'.1f')}")
+        x = 93 + line.line[2][1] * self.tileSize * 1.35 + self.tileSize/2 - text_width/2
+        y = 104 + line.line[2][0] * self.tileSize + self.tileSize/2
+
+        self.displayTextToScreen(screen,text,x,y)
+
+    def displayBonusScreen(self,screen):
+        font = pygame.font.Font('freesansbold.ttf', 100)
+
+        # Top text
+        top_text = font.render(f"BONUS GAME", True,"green","black")
+        text_width, text_height = font.size("Bonus Game")
+        x1 = 450-text_width/2
+        y1 = 300-text_height/2
+        self.displayTextToScreen(screen,top_text,x1,y1)
+
+        # Bottom text
+        font = pygame.font.Font('freesansbold.ttf', 60)
+        bottom_text = font.render(f"You won {self.freeSpins} free spins!",True,"green","black")
+        text_width, text_height = font.size(f"You won {self.freeSpins} free spins!")
+        x2 = 500-text_width/2
+        y2 = 400-text_height/2
+
+        self.displayTextToScreen(screen,bottom_text,x2,y2)
+    
+    def displayFreeSpins(self,screen):
+        font = pygame.font.Font('freesansbold.ttf', 32)
+        text = font.render(f"Free Spins: {self.freeSpins}",True,"green")
+        text_width, text_height = font.size(f"{self.freeSpins} Free Spins")
+
+        x = 780-text_width/2
+        y = 700-text_height/2
+
+        self.displayTextToScreen(screen,text,x,y) 
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

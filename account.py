@@ -1,8 +1,8 @@
 class Account:
-    def __init__(self,balance):
+    def __init__(self,balance, baseBet):
         self.balance = balance
         self.wonAmount = 0
-        self.betAmount = 10
+        self.betAmount = baseBet
         self.bonusTotalWin = 0
     
     def changeBetAmount(self,bet):
@@ -28,7 +28,7 @@ class Account:
 
     def addBonusToBalance(self):
         if self.bonusTotalWin > 0:
-            self.balance += self.bonusTotalWin
+            self.balance += round(self.bonusTotalWin,2)
         self.bonusTotalWin = 0
 
     def deposit(amount):
