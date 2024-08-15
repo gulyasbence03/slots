@@ -20,6 +20,10 @@ class ViewSlotMachine:
         self.animSprite = 0
         self.currentTable = np.zeros((slotMachine.cols,slotMachine.rows), dtype=ViewSymbol)
         self.spinFinished = True
+        self.baseX = (1500 - 910) / 2 + 48
+        self.baseY = 150
+        self.tableBackground = None
+        self.storyBackground = None
 
         # Sound
         self.soundPlayer = SoundPlayer(slotMachine.cols,slotMachine.rows)
@@ -32,11 +36,12 @@ class ViewSlotMachine:
         self.bonusWildisOut = [[False]*slotMachine.rows for _ in range(slotMachine.cols)]
 
     def clearScreen(self,screen):
-        screen.fill('black')
-        screen.blit(self.background,[45,60])
+        screen.blit(self.storyBackground,[0,0])
+        screen.blit(self.tableBackground,[self.baseX - 47,self.baseY - 40])
 
     def display(self, screen):
         self.clearScreen(screen)
+        self.displayBalance(screen)
         if self.bonusScreen and self.spinFinished:
             self.displayBonusScreen(screen)
             return not self.spinFinished
@@ -54,9 +59,6 @@ class ViewSlotMachine:
         if self.spinFinished and self.currentTable[0][0] != 0:
             self.slotMachine.checkWins()
             self.slotMachine.countWins(self.account, self.bonusOn)
-
-            if len(self.account.wonAmounts) > 0:
-                self.displayWinCount(screen, self.account.wonAmounts)
             
             numberOfScatters = self.slotMachine.checkBonus(self.bonusOn)
             if numberOfScatters >= 3:
@@ -66,10 +68,13 @@ class ViewSlotMachine:
 
             self.displayWins(screen)
 
-        self.displayBalance(screen)
+            if not self.bonusOn:
+                self.displayWinCount(screen, self.account.wonAmounts)
+        
         if self.bonusOn:
             self.displayFreeSpins(screen)
             self.displayBonusTotalWin(screen)
+        
 
         return not self.spinFinished
 
@@ -114,3 +119,4 @@ class ViewSlotMachine:
 
     def displayBalance(self,screen):
         raise NotImplementedError("Subclasses should implement this method: 'displayBalance(self,screen)'")
+    

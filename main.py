@@ -12,7 +12,7 @@ class Game:
         self.spinLock = False
         self.fps = fps
         pygame.init()
-        self.screen = pygame.display.set_mode((1000,900))
+        self.screen = pygame.display.set_mode((1500,870))
         pygame.display.set_caption("CrazySlot")
         self.clock = pygame.time.Clock()
 

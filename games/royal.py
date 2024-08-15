@@ -14,8 +14,20 @@ class GG(ViewSlotMachine):
         self.slotMachine.lines = self.setLines(26)
         self.lines = self.setLines(26)
 
-        self.background = pygame.image.load('assets/background.png')
-        self.background = pygame.transform.scale(self.background,[910,600])
+        self.tableBackground = pygame.image.load('assets/background.png')
+        self.tableBackground = pygame.transform.scale(self.tableBackground,[910,600])
+
+        self.storyBackground = pygame.image.load('assets/palace.png')
+        self.storyBackground = pygame.transform.scale(self.storyBackground,[1500,870])
+
+        self.plusIcon = pygame.image.load('assets/plus.png')
+        self.plusIcon = pygame.transform.scale(self.plusIcon,[40,35])
+
+        self.minusIcon = pygame.image.load('assets/minus.png')
+        self.minusIcon = pygame.transform.scale(self.minusIcon,[40,35])
+
+        self.spinIcon =  pygame.image.load('assets/spin.png')
+        self.spinIcon = pygame.transform.scale(self.spinIcon,[100,100])
 
         self.soundPlayer.setReelStopSound(pygame.mixer.Sound("assets/reelstop.wav"))
         self.soundPlayer.setWildSound(pygame.mixer.Sound("assets/wild.wav"))
@@ -222,11 +234,11 @@ class GG(ViewSlotMachine):
 
 
         if  movingValue < (rows-j-1)*self.tileSize:
-            symbol.x = 93 + i * self.tileSize * 1.35
-            symbol.y = 104 + movingValue
+            symbol.x = self.baseX + i * self.tileSize * 1.35
+            symbol.y = self.baseY + movingValue
         else:
-            symbol.x = 93 + i * self.tileSize * 1.35
-            symbol.y = 104 + (rows-j-1)*self.tileSize
+            symbol.x = self.baseX + i * self.tileSize * 1.35
+            symbol.y = self.baseY + (rows-j-1)*self.tileSize
         
             # if reel stopped to play the wild sounds if there is any
             if self.soundPlayer.checkIfReelStopped(j,rows,i):
@@ -251,8 +263,8 @@ class GG(ViewSlotMachine):
                         
                         
                 else:
-                    symbol.x = 93 + i * self.tileSize * 1.35
-                    symbol.y = 104 + (rows-j-1)*self.tileSize
+                    symbol.x = self.baseX + i * self.tileSize * 1.35
+                    symbol.y = self.baseY + (rows-j-1)*self.tileSize
                     symbol.x -= (symbol.symbolSize-self.tileSize)  / 2
                     symbol.y -= (symbol.symbolSize-self.tileSize)  / 2
                     screen.blit(symbol.image,[symbol.x,symbol.y])
@@ -267,10 +279,10 @@ class GG(ViewSlotMachine):
 
             line = self.slotMachine.winLines[int((self.animSprite/30) % len(self.slotMachine.winLines))]
             for i in range(len(line.line)-1):
-                start = (93 + line.line[i][1] * self.tileSize * 1.35 + self.tileSize/2,
-                            104 + line.line[i][0] * self.tileSize + self.tileSize/2)  
-                end = (93 + line.line[i+1][1] * self.tileSize * 1.35 + self.tileSize/2,
-                            104 + line.line[i+1][0] * self.tileSize + self.tileSize/2)
+                start = (self.baseX + line.line[i][1] * self.tileSize * 1.35 + self.tileSize/2,
+                            self.baseY + line.line[i][0] * self.tileSize + self.tileSize/2)  
+                end = (self.baseX + line.line[i+1][1] * self.tileSize * 1.35 + self.tileSize/2,
+                            self.baseY + line.line[i+1][0] * self.tileSize + self.tileSize/2)
 
                 pygame.draw.line(screen,"gold",start,end,7)
 
@@ -279,8 +291,8 @@ class GG(ViewSlotMachine):
                 for elem in currLine:       
                     symbol = self.currentTable[elem[0],self.slotMachine.rows - elem[1] -1]
 
-                    originX = 93 + elem[0] * self.tileSize * 1.35 
-                    originY = 105 + (elem[1])*self.tileSize
+                    originX = self.baseX + elem[0] * self.tileSize * 1.35 
+                    originY = self.baseY+1 + (elem[1])*self.tileSize
 
                     outlineX = originX - (symbol.symbolSize*0.8-self.tileSize)  / 2
                     outlineY = originY - (symbol.symbolSize*0.8-self.tileSize)  / 2
@@ -307,43 +319,72 @@ class GG(ViewSlotMachine):
                 self.displayLineWin(screen,line)
     
     def displayBalance(self,screen):
-        font = pygame.font.Font('freesansbold.ttf', 32)
+        tempSurface = pygame.Surface((1500,80),pygame.SRCALPHA)
+        tempSurface.set_alpha(140)
+        pygame.draw.rect(tempSurface,pygame.Color(0,0,0),pygame.Rect(0,0,1500,80))
+        screen.blit(tempSurface,(0,870-80))
 
-        text = font.render(f"Balance: ${format(self.account.balance, '.1f')}", True, "black", "gold")
-        x = 100
-        y = 680
-
+        font = pygame.font.Font('freesansbold.ttf', 18)
+        text = font.render("BALANCE",False, "white")
+        x = self.baseX - 150
+        y = 800
         self.displayTextToScreen(screen,text,x,y)
 
-    def displayWinCount(self,screen, amounts):
-        font = pygame.font.Font('freesansbold.ttf', 28)
+        font = pygame.font.Font('freesansbold.ttf', 30)
+        text = font.render(f"${format(self.account.balance, '.1f')}",False, "gold")
+        x = self.baseX - 160
+        y = 825
+        self.displayTextToScreen(screen,text,x,y)
+
+        font = pygame.font.Font('freesansbold.ttf', 18)
+        text = font.render("BET",False, "white")
+        x = self.baseX + 100
+        y = 800
+        self.displayTextToScreen(screen,text,x,y)
+
+        screen.blit(self.minusIcon,(self.baseX + 30,820))
+        screen.blit(self.plusIcon,(self.baseX + 170,820))
+
+        font = pygame.font.Font('freesansbold.ttf', 30)
+        text = font.render(f"${format(self.account.betAmount, '.1f')}",False, "gold")
+        x = self.baseX + 90
+        y = 825
+        self.displayTextToScreen(screen,text,x,y)
         
+        font = pygame.font.Font('freesansbold.ttf', 18)
+        text = font.render("WIN",False, "white")
+        x = self.baseX + 800
+        y = 800
+        self.displayTextToScreen(screen,text,x,y)
+
+        screen.blit(self.spinIcon,(705,760))
+
+    def displayWinCount(self,screen, amounts):
         amount = 0
         for elem in list(amounts.values()):
             amount += elem
-        text = font.render(f"Won: ${format(amount, '.1f')}", True,"gold")
-        x = 420
-        y = 670
 
+        font = pygame.font.Font('freesansbold.ttf', 30)
+        text = font.render(f"${format(amount, '.1f')}",False, "gold")
+        x = self.baseX +790
+        y = 825
         self.displayTextToScreen(screen,text,x,y)
-    
+
     def displayBonusTotalWin(self,screen):
-        font = pygame.font.Font('freesansbold.ttf', 28)
 
-        if self.bonusOn:
-            text = font.render(f"Total Won: ${format(self.account.bonusTotalWin, '.1f')}", True,"gold")
-            x = 400
-            y = 710
-
-            self.displayTextToScreen(screen,text,x,y)
+        font = pygame.font.Font('freesansbold.ttf', 30)
+        text = font.render(f"${format(self.account.bonusTotalWin, '.1f')}",False, "gold")
+        x = self.baseX +790
+        y = 825
+        self.displayTextToScreen(screen,text,x,y)
     
     def displayLineWin(self,screen,line):
         font = pygame.font.Font('freesansbold.ttf', 50)
 
         text = font.render(f"{format(self.account.wonAmounts.get(line.name),'.1f')}", True,"gold","black")
         text_width, text_height = font.size(f"{format(self.account.wonAmounts.get(line.name),'.1f')}")
-        x = 93 + line.line[2][1] * self.tileSize * 1.35 + self.tileSize/2 - text_width/2
-        y = 104 + line.line[2][0] * self.tileSize + self.tileSize/2
+        x = self.baseX + line.line[2][1] * self.tileSize * 1.35 + self.tileSize/2 - text_width/2
+        y = self.baseY + line.line[2][0] * self.tileSize + self.tileSize/2
 
         self.displayTextToScreen(screen,text,x,y)
 
@@ -353,7 +394,7 @@ class GG(ViewSlotMachine):
         # Top text
         top_text = font.render(f"BONUS GAME", True,"green","black")
         text_width, text_height = font.size("Bonus Game")
-        x1 = 450-text_width/2
+        x1 = self.baseX + 450-text_width/2
         y1 = 300-text_height/2
         self.displayTextToScreen(screen,top_text,x1,y1)
 
@@ -361,7 +402,7 @@ class GG(ViewSlotMachine):
         font = pygame.font.Font('freesansbold.ttf', 60)
         bottom_text = font.render(f"You won {self.freeSpins} free spins!",True,"green","black")
         text_width, text_height = font.size(f"You won {self.freeSpins} free spins!")
-        x2 = 500-text_width/2
+        x2 = self.baseX + 500-text_width/2
         y2 = 400-text_height/2
 
         self.displayTextToScreen(screen,bottom_text,x2,y2)
@@ -371,7 +412,7 @@ class GG(ViewSlotMachine):
         text = font.render(f"Free Spins: {self.freeSpins}",True,"green")
         text_width, text_height = font.size(f"{self.freeSpins} Free Spins")
 
-        x = 780-text_width/2
+        x = self.baseX + 780-text_width/2
         y = 700-text_height/2
 
         self.displayTextToScreen(screen,text,x,y) 
