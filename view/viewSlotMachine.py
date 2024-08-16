@@ -21,7 +21,7 @@ class ViewSlotMachine:
         self.currentTable = np.zeros((slotMachine.cols,slotMachine.rows), dtype=ViewSymbol)
         self.spinFinished = True
         self.baseX = (1500 - 910) / 2 + 48
-        self.baseY = 150
+        self.baseY = 165
         self.tableBackground = None
         self.storyBackground = None
 

@@ -3,7 +3,6 @@ from model.symbols import *
 from view.viewSlotMachine import *
 from account import *
 
-
 class GG(ViewSlotMachine):
     def __init__(self):
         machine = SlotMachine((5,4),34+2)
@@ -28,6 +27,12 @@ class GG(ViewSlotMachine):
 
         self.spinIcon =  pygame.image.load('assets/spin.png')
         self.spinIcon = pygame.transform.scale(self.spinIcon,[100,100])
+
+        self.autoplayIcon =  pygame.image.load('assets/autoplay.png')
+        self.autoplayIcon = pygame.transform.scale(self.autoplayIcon,[60,60])
+
+        self.fastspinIcon =  pygame.image.load('assets/fastspin.png')
+        self.fastspinIcon = pygame.transform.scale(self.fastspinIcon,[60,60])
 
         self.soundPlayer.setReelStopSound(pygame.mixer.Sound("assets/reelstop.wav"))
         self.soundPlayer.setWildSound(pygame.mixer.Sound("assets/wild.wav"))
@@ -319,45 +324,50 @@ class GG(ViewSlotMachine):
                 self.displayLineWin(screen,line)
     
     def displayBalance(self,screen):
+
+        # BACKGROUND FOR BAR
         tempSurface = pygame.Surface((1500,80),pygame.SRCALPHA)
         tempSurface.set_alpha(140)
         pygame.draw.rect(tempSurface,pygame.Color(0,0,0),pygame.Rect(0,0,1500,80))
         screen.blit(tempSurface,(0,870-80))
 
+        # TITLES IN BAR
         font = pygame.font.Font('freesansbold.ttf', 18)
-        text = font.render("BALANCE",False, "white")
+
+        text_balance = font.render("BALANCE",False, "white")
         x = self.baseX - 150
         y = 800
-        self.displayTextToScreen(screen,text,x,y)
+        self.displayTextToScreen(screen,text_balance,x,y)
 
-        font = pygame.font.Font('freesansbold.ttf', 30)
-        text = font.render(f"${format(self.account.balance, '.1f')}",False, "gold")
-        x = self.baseX - 160
-        y = 825
-        self.displayTextToScreen(screen,text,x,y)
-
-        font = pygame.font.Font('freesansbold.ttf', 18)
-        text = font.render("BET",False, "white")
+        text_bet = font.render("BET",False, "white")
         x = self.baseX + 100
         y = 800
-        self.displayTextToScreen(screen,text,x,y)
+        self.displayTextToScreen(screen,text_bet,x,y)
 
-        screen.blit(self.minusIcon,(self.baseX + 30,820))
-        screen.blit(self.plusIcon,(self.baseX + 170,820))
-
-        font = pygame.font.Font('freesansbold.ttf', 30)
-        text = font.render(f"${format(self.account.betAmount, '.1f')}",False, "gold")
-        x = self.baseX + 90
-        y = 825
-        self.displayTextToScreen(screen,text,x,y)
-        
-        font = pygame.font.Font('freesansbold.ttf', 18)
-        text = font.render("WIN",False, "white")
+        text_win = font.render("WIN",False, "white")
         x = self.baseX + 800
         y = 800
-        self.displayTextToScreen(screen,text,x,y)
+        self.displayTextToScreen(screen,text_win,x,y)
 
+        # DATA FOR TITLES
+        font = pygame.font.Font('freesansbold.ttf', 30)
+
+        data_balance = font.render(f"${format(self.account.balance, '.1f')}",False, "gold")
+        x = self.baseX - 160
+        y = 825
+        self.displayTextToScreen(screen,data_balance,x,y)
+
+        data_bet = font.render(f"${format(self.account.betAmount, '.1f')}",False, "gold")
+        x = self.baseX + 90
+        y = 825
+        self.displayTextToScreen(screen,data_bet,x,y)
+
+        # ICON IN BAR
+        screen.blit(self.minusIcon,(self.baseX + 30,820))
+        screen.blit(self.plusIcon,(self.baseX + 170,820))
         screen.blit(self.spinIcon,(705,760))
+        screen.blit(self.autoplayIcon,(815,801))
+        screen.blit(self.fastspinIcon,(636,801))
 
     def displayWinCount(self,screen, amounts):
         amount = 0
@@ -389,31 +399,52 @@ class GG(ViewSlotMachine):
         self.displayTextToScreen(screen,text,x,y)
 
     def displayBonusScreen(self,screen):
-        font = pygame.font.Font('freesansbold.ttf', 100)
+        
+        
+        tempSurface = pygame.Surface((853,545),pygame.SRCALPHA)
+        tempSurface.set_alpha(220)
+        pygame.draw.rect(tempSurface,pygame.Color(0,0,0),pygame.Rect(0,0,853,545))
+        screen.blit(tempSurface,(self.baseX-17,self.baseY-14))
 
         # Top text
-        top_text = font.render(f"BONUS GAME", True,"green","black")
-        text_width, text_height = font.size("Bonus Game")
-        x1 = self.baseX + 450-text_width/2
-        y1 = 300-text_height/2
-        self.displayTextToScreen(screen,top_text,x1,y1)
+        font = pygame.font.Font('freesansbold.ttf', 100)
+        top_text = font.render(f"BONUS GAME", False,"gold")
+        x = self.baseX + 60
+        y = self.baseY + 80
+        self.displayTextToScreen(screen,top_text,x,y)
+
+        font = pygame.font.Font('freesansbold.ttf', 50)
+        text = font.render(f"Sticky Wilds", False,"orange")
+        x = self.baseX + 260
+        y = self.baseY + 200
+        self.displayTextToScreen(screen,text,x,y)
 
         # Bottom text
         font = pygame.font.Font('freesansbold.ttf', 60)
-        bottom_text = font.render(f"You won {self.freeSpins} free spins!",True,"green","black")
-        text_width, text_height = font.size(f"You won {self.freeSpins} free spins!")
-        x2 = self.baseX + 500-text_width/2
-        y2 = 400-text_height/2
+        text = font.render(f"You won {self.freeSpins} free spins!",False,"gold")
+        x = self.baseX + 100
+        y = self.baseY + 320
+        self.displayTextToScreen(screen,text,x,y)
 
-        self.displayTextToScreen(screen,bottom_text,x2,y2)
     
     def displayFreeSpins(self,screen):
-        font = pygame.font.Font('freesansbold.ttf', 32)
-        text = font.render(f"Free Spins: {self.freeSpins}",True,"green")
-        text_width, text_height = font.size(f"{self.freeSpins} Free Spins")
+        font = pygame.font.Font('freesansbold.ttf', 36)
+        text = font.render(f"FREE",True,"white")
+        x = 1305
+        y = 110
+        self.displayTextToScreen(screen,text,x,y)
 
-        x = self.baseX + 780-text_width/2
-        y = 700-text_height/2
+        text = font.render(f"SPINS",True,"white")
+        x = 1298
+        y = 158
+        self.displayTextToScreen(screen,text,x,y)
 
-        self.displayTextToScreen(screen,text,x,y) 
+        font = pygame.font.Font('freesansbold.ttf', 60)
+        text_width, text_height = font.size(f"{self.freeSpins}")
+        text = font.render(f"{self.freeSpins}",True,"white")
+        x = 1355 - text_width/2 
+        y = 208
+        self.displayTextToScreen(screen,text,x,y)
+
+        
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
