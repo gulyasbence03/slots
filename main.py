@@ -34,9 +34,18 @@ class Game:
                         else:
                             self.slot.soundPlayer.mute = False
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    self.setSpinLock()
-                    if not self.spinLock:
-                        self.slot.spin()
+                    if self.slot.plusButton.check_press(event.pos):
+                        if self.slot.spinFinished and not self.slot.bonusOn:
+                            self.slot.account.increaseBet()
+                    if self.slot.minusButton.check_press(event.pos):
+                        if self.slot.spinFinished and not self.slot.bonusOn:
+                            self.slot.account.lowerBet()
+                    if self.slot.spinButton.check_press(event.pos):
+                        self.setSpinLock()
+                        if not self.spinLock:
+                            self.slot.spin()
+                        
+                    
                             
                             
 

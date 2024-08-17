@@ -2,7 +2,7 @@ import numpy as np
 from model.symbols import FaceSymbol,WildSymbol,ScatterSymbol
 from view.viewSymbol import *
 from collections import Counter
-from view.line import *
+from view.tools import *
 from sound import *
 
 class ViewSlotMachine:
@@ -20,7 +20,7 @@ class ViewSlotMachine:
         self.animSprite = 0
         self.currentTable = np.zeros((slotMachine.cols,slotMachine.rows), dtype=ViewSymbol)
         self.spinFinished = True
-        self.baseX = (1500 - 910) / 2 + 48
+        self.baseX = 343 #(1500 - 910) / 2 + 48
         self.baseY = 165
         self.tableBackground = None
         self.storyBackground = None
@@ -34,6 +34,13 @@ class ViewSlotMachine:
         self.freeSpins = 0
         self.bonusWildSlots = []
         self.bonusWildisOut = [[False]*slotMachine.rows for _ in range(slotMachine.cols)]
+
+        #Buttons
+        self.plusButton = Button((353 + 170,820),[40,35],'assets/plus.png')
+        self.minusButton = Button((333 + 30,820),[40,35],'assets/minus.png')
+        self.spinButton = Button((705,760),[100,100],'assets/spin.png')
+        self.autoplayButton = Button((815,801),[60,60],'assets/autoplay.png')
+        self.fastspinButton = Button((636,801),[60,60],'assets/fastspin.png')
 
     def clearScreen(self,screen):
         screen.blit(self.storyBackground,[0,0])

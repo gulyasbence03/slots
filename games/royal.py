@@ -2,11 +2,12 @@ from model.slotMachine import *
 from model.symbols import *
 from view.viewSlotMachine import *
 from account import *
+from view import tools
 
 class GG(ViewSlotMachine):
     def __init__(self):
         machine = SlotMachine((5,4),34+2)
-        account = Account(balance=1000,baseBet=1)
+        account = Account(balance=1000,baseBet=2) # index bet
         ViewSlotMachine.__init__(self,machine,128,"reel",0.38,account)
         self.loadReels()
         self.slotMachine.setReels(self.reels)
@@ -18,21 +19,6 @@ class GG(ViewSlotMachine):
 
         self.storyBackground = pygame.image.load('assets/palace.png')
         self.storyBackground = pygame.transform.scale(self.storyBackground,[1500,870])
-
-        self.plusIcon = pygame.image.load('assets/plus.png')
-        self.plusIcon = pygame.transform.scale(self.plusIcon,[40,35])
-
-        self.minusIcon = pygame.image.load('assets/minus.png')
-        self.minusIcon = pygame.transform.scale(self.minusIcon,[40,35])
-
-        self.spinIcon =  pygame.image.load('assets/spin.png')
-        self.spinIcon = pygame.transform.scale(self.spinIcon,[100,100])
-
-        self.autoplayIcon =  pygame.image.load('assets/autoplay.png')
-        self.autoplayIcon = pygame.transform.scale(self.autoplayIcon,[60,60])
-
-        self.fastspinIcon =  pygame.image.load('assets/fastspin.png')
-        self.fastspinIcon = pygame.transform.scale(self.fastspinIcon,[60,60])
 
         self.soundPlayer.setReelStopSound(pygame.mixer.Sound("assets/reelstop.wav"))
         self.soundPlayer.setWildSound(pygame.mixer.Sound("assets/wild.wav"))
@@ -340,7 +326,7 @@ class GG(ViewSlotMachine):
         self.displayTextToScreen(screen,text_balance,x,y)
 
         text_bet = font.render("BET",False, "white")
-        x = self.baseX + 100
+        x = self.baseX + 103
         y = 800
         self.displayTextToScreen(screen,text_bet,x,y)
 
@@ -353,21 +339,23 @@ class GG(ViewSlotMachine):
         font = pygame.font.Font('freesansbold.ttf', 30)
 
         data_balance = font.render(f"${format(self.account.balance, '.1f')}",False, "gold")
-        x = self.baseX - 160
+        text_width, text_height = font.size(f"${format(self.account.balance, '.1f')}")
+        x = self.baseX - text_width/2 - 110
         y = 825
         self.displayTextToScreen(screen,data_balance,x,y)
 
         data_bet = font.render(f"${format(self.account.betAmount, '.1f')}",False, "gold")
-        x = self.baseX + 90
+        text_width, text_height = font.size(f"${format(self.account.betAmount, '.1f')}")
+        x = self.baseX + 120 - text_width/2
         y = 825
         self.displayTextToScreen(screen,data_bet,x,y)
 
         # ICON IN BAR
-        screen.blit(self.minusIcon,(self.baseX + 30,820))
-        screen.blit(self.plusIcon,(self.baseX + 170,820))
-        screen.blit(self.spinIcon,(705,760))
-        screen.blit(self.autoplayIcon,(815,801))
-        screen.blit(self.fastspinIcon,(636,801))
+        self.spinButton.draw(screen)
+        self.plusButton.draw(screen)
+        self.minusButton.draw(screen)
+        self.autoplayButton.draw(screen)
+        self.fastspinButton.draw(screen)
 
     def displayWinCount(self,screen, amounts):
         amount = 0
